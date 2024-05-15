@@ -13,11 +13,11 @@ suppressPackageStartupMessages({
   library(SingleCellExperiment)
 })
 
-# load seurat object
+# load split seurat object
 seurat_obj_split_input <- readRDS("./seurat_obj_split.rds")
 print("input loaded")
 
-# dir_out
+# specify output directory
 dir_out <- snakemake@config$integration_output_dir
 
 ####################################
