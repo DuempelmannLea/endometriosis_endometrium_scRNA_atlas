@@ -4,7 +4,7 @@
 # Trajectory analysis with monocle3
 # 
 # srun --pty -c20 -t5-0:00:00 --mem=200000 /bin/bash
-# singularity exec --bind /data/projects/p735_Endometriosis /mnt/apps/centos7/R_v4.3.1_scRNAseq.sif R
+# singularity exec --bind /data/projects/ENDO /mnt/apps/centos7/R_v4.3.1_scRNAseq.sif R
 #####################################
 
 library(Seurat)          
@@ -13,17 +13,16 @@ library(monocle3)
 library(dplyr)
 library(ggplot2)
 
-
-workPath <- "/data/projects/p735_Endometriosis"            ### ADJUST
-analysisFolder <- paste0(workPath, "/downstream_analyses/trajectoryAnalysis/monocle3") # This will be correct, if files were produced by scRNAseq_qc-filtering-normalization.rmd
-
-out <- "E044A050_seed621_filteredWO_ciliatedMesothelialMUC5B"
-rawData <- paste0(workPath, "/raw_data/Heidi_timetrajectories/E044A050_seed621_filteredWO_ciliatedMesothelialMUC5B.rds")
+##Set paths
+workPath <- "/ENDO"
+analysisFolder <- paste0(workPath, "/ENDO/monocle3")
+out <- "epithelial"
+rawData <- paste0(workPath, "/raw_data/epithelial.rds")
 metadataFile <- ""
-
 subsetClusters <- c()  
 #-------------
 
+#Load data
 dir.create(paste0(analysisFolder, "/", out))
 
 data <- readRDS(rawData)
@@ -35,6 +34,7 @@ if(metadataFile != ""){
   data@meta.data$CycleDay <- metadata[rownames(data@meta.data), "CycleDay"]
 }
 
+#Plots
 DefaultAssay(data) <- "SCT"
 Idents(data) <- data@meta.data$Symphony_Refined
 
@@ -50,6 +50,8 @@ pdf(paste0(analysisFolder, "/", out, "/UMAP_CyclePhase.pdf"))
   DimPlot(data, reduction = "umap", label=TRUE, group.by="CyclePhase") + labs(title="CyclePhase")
 dev.off()
 
+
+##Prepare data for monocle
 if(is.null(subsetClusters)){
   subsetCellnames <- WhichCells(data, idents = subsetClusters)
   data <- subset(data, cells=subsetCellnames)
@@ -94,7 +96,7 @@ dev.off()
 
 saveRDS(data_monocl, paste0(analysisFolder, "/", out2, "/trajectory.rds"))
 
-#Set timepoint 0:
+#Set start time point:
 data_monocl <- order_cells(data_monocl)
 out2 <- paste0(out, "/trajectory_day5-6-7_greenCircle")
 dir.create(paste0(analysisFolder, "/", out2))
@@ -106,7 +108,9 @@ pdf(paste0(analysisFolder, "/", out2, "/trajectory_pseudotime.pdf"), width = 10,
                      graph_label_size=3, cell_size = 1)
 dev.off()
 
-
+##################################################################################################################################
+##The results of the subsequent part was not included in the paper, but might be useful for other research projects
+##################################################################################################################################
 
 # Differential expression along trajectory --------
 # Perform the test
