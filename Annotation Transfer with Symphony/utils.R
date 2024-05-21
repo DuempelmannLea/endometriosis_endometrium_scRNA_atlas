@@ -99,7 +99,7 @@ symphony <- function(CELLTYPEref,
   } else if (CELLTYPEref %in% c("Tan_global", "Tan_lymphocyte", "Tan_myeloid", "Tan_endothelial", "Tan_stromal")) {
   TanIntegrationVars <- c("sample", "stage")
   THETA_REF <- c(2, 1)
-  }   
+  }   #Same parameters as in Tan et al. 2022 paper
   ref_harmObj = harmony::HarmonyMatrix(
     data_mat = t(Z_pca_ref),  ## PCA embedding matrix of cells
     meta_data = ref_metadata, ## dataframe with cell labels
