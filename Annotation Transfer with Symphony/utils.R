@@ -30,18 +30,14 @@ plotBasic = function(umap_labels,                # metadata, with UMAP labels in
 }
 
 symphony <- function(CELLTYPEref, 
-                     CELLTYPEquery, 
-                     TanIntegrationVars, 
-                     THETA_REF, 
-                     ENDOIntegrationVars,
-                     dir_out) {
+                     CELLTYPEquery) {
   
   ########################################################
   ##### 00. Create dir_out
   ######################################################## 
   
   #create directory
-  dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A047/prolif_sec_",CELLTYPEref,"ref_",CELLTYPEquery,"query",str_c(ENDOIntegrationVars, collapse = ""),"/")
+  dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A047/prolif_sec_",CELLTYPEref,"ref_",CELLTYPEquery,"query","/")
   dir.create(dir_out, recursive = TRUE)
   setwd(dir_out)
   
@@ -97,6 +93,13 @@ symphony <- function(CELLTYPEref,
   
   #Run Harmony integration
   set.seed(1)
+  if (CELLTYPEref == "Tan_epithelial") {
+  TanIntegrationVars <- "sample"
+  THETA_REF <- 1.5
+  } else if (CELLTYPEref %in% c("Tan_global", "Tan_lymphocyte", "Tan_myeloid", "Tan_endothelial", "Tan_stromal")) {
+  TanIntegrationVars <- c("sample", "stage")
+  THETA_REF <- c(2, 1)
+  }   
   ref_harmObj = harmony::HarmonyMatrix(
     data_mat = t(Z_pca_ref),  ## PCA embedding matrix of cells
     meta_data = ref_metadata, ## dataframe with cell labels
@@ -149,7 +152,7 @@ symphony <- function(CELLTYPEref,
   query = mapQuery(query_exp,             # query gene expression (genes x cells)
                    query_metadata,        # query metadata (cells x attributes)
                    reference,             # Symphony reference object
-                   vars = ENDOIntegrationVars,      
+                   vars = c("batch", "sample"),      
                    sigma = 0.1,
                    do_normalize = FALSE,  # perform log(CP10k+1) normalization on query
                    do_umap = TRUE)        # project query cells into reference UMAP
