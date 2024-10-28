@@ -1,0 +1,10 @@
+Data analysis details including used versions:
+
+The NovaSeq runs were demultiplexed using the bcl2fastq v2.20.0.422 software from Illumina.
+Gene indexing, cell debarcoding, deduplication, read mapping, and estimation of transcript-level expression by pseudo-alignment were performed with the Salmon software package AlevinQC (1.6.0). 
+The Seurat (4.1.0), scDblFinder (1.4.0) and scater (1.18.0) packages, implemented in snakemake (5.14), were used to perform quality control, integration of the endometrial single-cell atlas and visualization of the data on the sample-, cell- and gene-level.
+Following data analysis were performed, with the R package names and versions given in brackets: Sample-wise Principal Component Analysis (PCAtools_2.10.0), annotation transfer (symphony_0.1.1), identification of menstrual cycle phase-specific markers (Seurat_5.0.3, FindAllMarkers), 
+time trajectory analysis (Monocle3_1.3.4), cluster-wise differential expression analysis (bioconductor-muscat_1.12.0) and ligand-receptor analysis (CellChat_2.0.0). 
+Endometriosis predictions were performed with the interpretable neural network algorithm CellCnn (version 0.2), implemented in the ScaiVision platform (version 1.6.3) using PyTorch (torch_1.10.2)
+Custom code for atlas integration, Sample-wise Principal Component Analysis, annotation transfer, time trajectory analysis, cluster-wise differential expression analysis, and ligand-receptor analysis are available at https://github.com/DuempelmannLea/endometriosis_endometrium_scRNA_atlas. 
+All raw sequencing data and the processed Seurat object are available at NCBI’s Gene Expression Omnibus (series accession number: GSE111976; https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE266265).
