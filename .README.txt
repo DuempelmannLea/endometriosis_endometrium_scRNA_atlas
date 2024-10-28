@@ -7,4 +7,5 @@ Following data analysis were performed, with the R package names and versions gi
 time trajectory analysis (Monocle3_1.3.4), cluster-wise differential expression analysis (bioconductor-muscat_1.12.0) and ligand-receptor analysis (CellChat_2.0.0). 
 Endometriosis predictions were performed with the interpretable neural network algorithm CellCnn (version 0.2), implemented in the ScaiVision platform (version 1.6.3) using PyTorch (torch_1.10.2)
 Custom code for atlas integration, Sample-wise Principal Component Analysis, annotation transfer, time trajectory analysis, cluster-wise differential expression analysis, and ligand-receptor analysis are available at https://github.com/DuempelmannLea/endometriosis_endometrium_scRNA_atlas. 
+Typical install time of all packages and dependencies is about 4 hours.
 All raw sequencing data and the processed Seurat object are available at NCBI’s Gene Expression Omnibus (series accession number: GSE111976; https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?&acc=GSE266265).
