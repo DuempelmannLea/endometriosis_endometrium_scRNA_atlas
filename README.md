@@ -3,10 +3,10 @@
 ## **Introduction**
 
 This repository is intended to support the analysis presented in the accompanying publication "Tracing Endometriosis: Coupling deeply phenotyped, single-cell based Endometrial Differences and AI for disease pathology and prediction".
-It contains all code used for processing of the raw data,... as well as the code to recreate figures and extended data figures.
+It contains custom code for atlas integration, Sample-wise Principal Component Analysis, annotation transfer, time trajectory analysis, cluster-wise differential expression analysis, and ligand-receptor analysis. as well as the code to recreate figures and extended data figures.
 
 ## **Associated Publication**
-### ** Publication Title**
+### **Publication Title**
 
 Tracing Endometriosis: Coupling deeply phenotyped, single-cell based Endometrial Differences and AI for disease pathology and prediction
 
