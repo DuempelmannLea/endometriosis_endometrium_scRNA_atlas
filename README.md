@@ -6,7 +6,7 @@ This repository is intended to support the analysis presented in the accompanyin
 It contains all code used for processing of the raw data,... as well as the code to recreate figures and extended data figures.
 
 ## **Associated Publication**
-### ** Publication Title*
+### ** Publication Title**
 
 Tracing Endometriosis: Coupling deeply phenotyped, single-cell based Endometrial Differences and AI for disease pathology and prediction
 
