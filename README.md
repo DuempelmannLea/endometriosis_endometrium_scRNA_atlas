@@ -29,17 +29,22 @@ All raw sequencing data and the processed Seurat object are available at NCBI’
 
 To install Project Title, follow these steps:
 
-1. Clone the repository: **`git clone https://github.com/DuempelmannLea/endometriosis_endometrium_scRNA_atlas.git`**
-2. Navigate to the project directory: **`cd project-title`**
-3. Install dependencies: **`npm install`**
-4. Link data objects
-cd endometriosis_endometrium_scRNA_atlas/data
-ln -s /path/to/ENDOatlas.rds ENDOatlas.rds
-...
+1. Clone the repository: 
+    ```{bash}
+    cd /path/for/code
+    git clone https://github.com/DuempelmannLea/endometriosis_endometrium_scRNA_atlas.git
+    ```
+2. Link data objects:
+    ```{bash}
+    cd endometriosis_endometrium_scRNA_atlas/data
+    ln -s /path/to/ EndoAtlas.rds EndoAtlas.rds
+    ln -s /path/to/64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz 64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz
+    ...
+    ```
 
 ## **Usage**
 
-To use Project Title, follow these steps:
+Follow these steps:
 
 1. Open the project in your favorite code editor.
 2. Modify the source code to fit your needs.
