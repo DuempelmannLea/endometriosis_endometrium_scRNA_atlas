@@ -1,0 +1,64 @@
+Annotation main	Annotation refined	Annotation united	
+mesenchymal	eF2	eF2	
+endothelial	EC-tip	Endothelial1	
+mesenchymal	eF3	eF	
+epithelial	glandular early-secretory	Epithelial2	
+epithelial	ciliated	ciliated	
+mesenchymal	dS1-myofibroblast	dS1-myofibroblast	
+epithelial	glandular	Epithelial1	
+mesenchymal	Prv-STEAP4	Prv	
+endothelial	EC-artery	Endothelial1	
+mesenchymal	dS2	dS2	
+endothelial	EC-HEV	EC-HEV	
+myeloid	M?1-LYVE1	macrophage	
+mesenchymal	eF1	eF	
+endothelial	LEC	LEC	
+mesenchymal	VSMC	Prv	
+mesenchymal	Prv-MYH11	Prv	
+myeloid	cDC2	DC	
+mesenchymal	eF4-CXCL14	eF4-CXCL14	
+mesenchymal	fib C7	C7	
+myeloid	pre-cDC2	DC	
+myeloid	M?3-APOE	macrophage	
+myeloid	cDC1	DC	
+lymphocyte	_EM	Tcell	
+myeloid	M?4-infiltrated	macrophage	
+mesenchymal	Prv-CCL19	Prv	
+endothelial	EC-capillary	Endothelial1	
+epithelial	mid-secretory	Epithelial2	
+endothelial	EC-aPCV	Endothelial1	
+lymphocyte	T_N/T_CM	Tcell	
+myeloid	DC3	DC	
+endothelial	EC-PCV	Endothelial1	
+epithelial	mesothelial	mesothelial	
+epithelial	lumenal	Epithelial1	
+myeloid	M?5-activated	M?5-activated	
+lymphocyte	B cell	B cell	
+myeloid	monocytes-CD16-	monocyte	
+lymphocyte	CD4 T_RM	Tcell	
+myeloid	mast cells	mast cells	
+epithelial	lumenal 1	Epithelial2	
+epithelial	lumenal 2	Epithelial2	
+epithelial	MUC5B+	MUC5B+	
+lymphocyte	T_Reg	Tcell	
+epithelial	TP63+/KRT5+	Epithelial1	
+myeloid	mDC	DC	
+mesenchymal	fib C7-SFRP2	C7	
+lymphocyte	NK1	NK	
+myeloid	M?2-peritoneal	macrophage	
+lymphocyte	CD8 T_RM	Tcell	
+lymphocyte	NK2	NK	
+lymphocyte	NK3	NK	
+lymphocyte	plasma	plasma	
+myeloid	pDC	pDC	
+myeloid	monocytes-CD16+	monocyte	
+lymphocyte	ILC	Tcell	
+lymphocyte	CTL	Tcell	
+lymphocyte	pNK	NK	
+myeloid	granulocytes	granulocytes	
+mesenchymal	dS3	dS3	
+mesenchymal	dS4	dS4	
+mesenchymal	Prv_VSMC secretory	Prv_VSMC secretory	
+mesenchymal	fib C7 secretory	fib C7 secretory	
+mesenchymal	fib C7 secretory_late	fib C7 secretory_late	
+mesenchymal	Prv_VSMC secretory_late	Prv_VSMC secretory_late	
