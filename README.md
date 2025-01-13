@@ -36,7 +36,7 @@ To install Project Title, follow these steps:
     ```
 2. Link data objects:
     ```{bash}
-    cd endometriosis_endometrium_scRNA_atlas/data
+    cd endometriosis_endometrium_scRNA_atlas/_Data
     ln -s /path/to/EndoAtlas.rds EndoAtlas.rds
     ln -s /path/to/64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz 64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz
     ...
