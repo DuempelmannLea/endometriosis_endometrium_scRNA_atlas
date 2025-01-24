@@ -25,87 +25,51 @@ library(gplots)
 library(RColorBrewer)
 library(randomcoloR)
 
-dir_out <- "/home/common/data/output/projects/ENDO/E044/A033/"
-dir.create(dir_out, recursive = TRUE)
-setwd(dir_out)
 ```
 
-In script
-Replaced ProlifPeriSecFinal with MenstrualCyclePhase_main
-
-
-```{r save downsampled data}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-
-# Downsample the number of cells per identity class
-Idents(data) <- data$sample
-data_ds <- subset(x = data, downsample = 200)
-saveRDS(data_ds, "/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-
-#Some plotting
-DimPlot(data, group.by = "AnnotationMain", raster = FALSE)
-DimPlot(data, group.by = "Symphony_Refined_A029", raster = FALSE)
-DimPlot(data, group.by = "Symphony_Refined_A029_United", raster = FALSE)
-
-#Save object subsetted for ScaiNet samples
-ScaiNETsamples <- read.csv("/home/common/data/output/projects/ENDO/E041/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")$names
-Idents(data) <- data$sample
-subset <- subset(data, idents = ScaiNETsamples)
-rm(data)
-gc()
-meta <- subset@meta.data
-saveRDS(subset, "/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_ScaiNETsamples.rds")
-rm(subset)
-gc()
-
-meta$AnnotationMain
-
-```
-
-Remove? TODO
-```{r order of samples by menstrual cycle phase and pseudotime}
-meta_final <- readRDS("/home/common/data/output/projects/ENDO/E044/A074/dataA003A033_metadata_ptime_snn_Final.rds")
-
-MenstrualCyclePhase_sampleOrder <- meta_final %>%
-  arrange(MenstrualCyclePhase,epithelial.pseudotime) %>%
-  distinct(sample,epithelial.pseudotime, MenstrualCyclePhase,CycleDay) %>%
-  pull(sample)
-saveRDS(MenstrualCyclePhase_sampleOrder, paste0(dir_out,"sampleorder_MenstrualCyclePhase_greenCirclemedian.RDS"))
-```
-
+ln -s /home/common/data/output/projects/ENDO/E044/A033/EndoAtlas_GEO_meta_complete_downsampled.rds EndoAtlas.rds
+EndoAtlas_meta <- readRDS(paste0(dir_data,"EndoAtlas_meta.rds"))
+EndoAtlas <- readRDS(paste0(dir_data,"EndoAtlas.rds"))
+EndoAtlas <- AddMetaData(EndoAtlas, EndoAtlas_meta)
+saveRDS(EndoAtlas,paste0(dir_data,"EndoAtlas.rds") )
 
 Add additional data to the Seurat metadata and reformat
 ```{r plotting of cell types per sample}
 #Set directory links and create directories
-dir_data <- "L:/GitHubDesktop/endometriosis_endometrium_scRNA_atlas/_Data/"
-dir_out <- "L:/GitHubDesktop/endometriosis_endometrium_scRNA_atlas/Figures_out/"
+dir_ENDO <- "/home/duempelmann/analysis-projects/ENDO/E044/A085/endometriosis_endometrium_scRNA_atlas/"
+
+dir_data <- paste0(dir_ENDO,"_Data/")
+dir_out <- paste0(dir_ENDO,"Figures_out/")
 if (!dir.exists(dir_out)) {
-  dir.create(dir_out)
+  dir.create(dir_out, recursive = TRUE)
 }
 
-  
 #Load data
-#A003A033 <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_metadata_ptime_snn_Final.rds")
-meta <- readRDS(paste0(dir_data, "EndoAtlas_GEO_meta_complete.rds"))
+EndoAtlas <- readRDS(paste0(dir_data, "EndoAtlas.rds"))
+EndoAtlas_meta <- EndoAtlas@meta.data
+
+#Preserve cell names
+EndoAtlas_meta$cell_names <- rownames(EndoAtlas_meta)
 
 ##Modify menstrual cycle information
 # Create column MenstrualCyclePhase_main based on MenstrualCyclePhase by merging the secretory sub-phases from 
-meta$MenstrualCyclePhase_main <- as.character(meta$MenstrualCyclePhase)
-meta$MenstrualCyclePhase_main[meta$MenstrualCyclePhase_main %in% c("secretory_early", "secretory_mid", "secretory_late")] <- "secretory"
+EndoAtlas_meta$MenstrualCyclePhase_main <- as.character(EndoAtlas_meta$MenstrualCyclePhase)
+EndoAtlas_meta$MenstrualCyclePhase_main[EndoAtlas_meta$MenstrualCyclePhase_main %in% c("secretory_early", "secretory_mid", "secretory_late")] <- "secretory"
 #Factor samples by MenstrualCyclePhase_main for plotting
-meta$MenstrualCyclePhase_main <- factor(meta$MenstrualCyclePhase_main, levels = c("proliferative","periovulatory","secretory"))
+EndoAtlas_meta$MenstrualCyclePhase_main <- factor(EndoAtlas_meta$MenstrualCyclePhase_main, levels = c("proliferative","periovulatory","secretory"))
 
 ##Add additional metadata from manuscript Supplementary Table 1
 # Read the tab-delimited text file
 SupplementaryTable1 <- read.delim(paste0(dir_data, "SupplementaryTable1.txt"), header = TRUE, stringsAsFactors = FALSE)
 # Perform a left join of the `meta` dataframe with `SupplementaryTable1`
-meta <- dplyr::left_join(
-  meta,
+EndoAtlas_meta <- dplyr::left_join(
+  EndoAtlas_meta,
   SupplementaryTable1 %>% 
     dplyr::select(
       Patient.sample.ID,
       epithelial.pseudotime,
       sequencing.batch,
+      X10x.capturing.batch,
       Minor.exclusion.criteria.logical,
       Menstrual.cycle.phase.marker.analysis,
       Cell.type.frequency.analysis..Figure.2e.f.,
@@ -115,102 +79,352 @@ meta <- dplyr::left_join(
   by = c("sample" = "Patient.sample.ID")
 )
 
-#Double-check, TODO
-table(meta$sample, meta$Minor.exclusion.criteria.logical)
-prolifsamples <- meta%>%
-  dplyr::filter(MenstrualCyclePhase_main == "proliferative") %>%
-  select(sample) %>%
-  distinct() %>%
-  arrange(sample) %>%
-  pull(sample)
-DEGsamples <- unique(read.csv("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/celltype_freq_sample.csv")$Var2)
-DEGsamples <- DEGsamples[order(DEGsamples)]
-setdiff(prolifsamples,DEGsamples) #MinorExclusion samples overlap with samples excluded in DEG analysis, sample87 is late secretory
-
 ##Determine order of samples by MenstrualCyclePhase and epithelial.pseudotime
-MenstrualCyclePhase_sampleOrder <- meta%>%
+MenstrualCyclePhase_sampleOrder <- EndoAtlas_meta%>%
   select(sample, MenstrualCyclePhase,epithelial.pseudotime) %>%
   distinct() %>%
   arrange(MenstrualCyclePhase, epithelial.pseudotime) %>%
   mutate(MenstrualCyclePhase_sampleOrder = row_number()) %>%
   ungroup()
 #Factor samples by MenstrualCyclePhase and epithelial.pseudotime for plotting
-meta$sample <- factor(meta$sample, levels = c(MenstrualCyclePhase_sampleOrder$sample))
+EndoAtlas_meta$sample <- factor(EndoAtlas_meta$sample, levels = c(MenstrualCyclePhase_sampleOrder$sample))
+
+#Add cell names as row names
+rownames(EndoAtlas_meta) <- EndoAtlas_meta$cell_names
+
+#Save EndoAtlas_meta as .rds
+saveRDS(EndoAtlas_meta, paste0(dir_data, "EndoAtlas_meta.rds"))
+
+#EndoAtlas_meta <- readRDS(paste0(dir_data, "EndoAtlas_meta.rds"))
 
 #Save color pals
 qual_col_pals <- brewer.pal.info[brewer.pal.info$category == "qual", ]
 col_vector <- unlist(mapply(brewer.pal, qual_col_pals$maxcolors, rownames(qual_col_pals)))
 ```
 
-Supplementary Data Figure 4 a
-```{r plotting of cell types per sample}
-#########################################################################
-# bar plot of the number of AnnotationRefined cells in each sample
-df <- meta%>%
+Save epithelial object and upload to GEO.
+```{r}
+#Load monocl object
+data_monocl <- readRDS("/home/common/data/output/projects/ENDO/E044/A062/trajectory_day5-6-7_greenCircle/trajectory_timepoint0.rds")
+listData <- (data_monocl@colData@listData)
+listData <- listData["cell_ident"]
+
+EndoAtlas_meta <- readRDS(paste0(dir_data, "EndoAtlas_meta.rds"))
+colnames(EndoAtlas_meta)
+
+########################
+# Extract cell.ident from listData
+cell_ids <- listData[["cell_ident"]]
+
+# Ensure cell_ids is not empty
+if (length(cell_ids) == 0) {
+  stop("cell.ident in listData is empty. Ensure it is populated before proceeding.")
+}
+
+# Filter and order EndoAtlas_meta by cell_ids
+filtered_meta <- EndoAtlas_meta[EndoAtlas_meta$cell_names %in% cell_ids, ]
+ordered_meta <- filtered_meta[match(cell_ids, filtered_meta$cell_names), ]
+
+# Verify alignment
+if (!all(ordered_meta$cell_names == cell_ids)) {
+  stop("Ordering of filtered EndoAtlas_meta does not match cell_ids.")
+}
+
+# Add columns from ordered_meta to listData
+columns_to_add <- c("sample", "EndometriosisStatus", "EndometriosisGrade", "CycleDay", 
+                    "ProgesteroneSerum", "MenstrualCyclePhase", "AnnotationMain", 
+                    "AnnotationRefined", "cell_names", "MenstrualCyclePhase_main")
+
+for (col in columns_to_add) {
+  if (col %in% colnames(ordered_meta)) {
+    listData[[col]] <- ordered_meta[[col]]
+  } else {
+    warning(paste("Column", col, "not found in EndoAtlas_meta. Skipping."))
+  }
+}
+
+# Update the main object
+data_monocl@colData@listData <- listData
+
+data_monocl@principal_graph_aux@listData[["UMAP"]][["pseudotime"]]
+
+saveRDS(data_monocl, paste0(dir_data, "epithelial_cells_monocle3.rds"))
+```
+
+
+###########################################
+Main Figures
+###########################################
+
+Figure 1c
+CODE OK
+```{r}
+
+order <- EndoAtlas_meta %>%
+  select(AnnotationMain, AnnotationRefined) %>%
   filter(!is.na(AnnotationMain)) %>%
-  group_by(sample, AnnotationMain, AnnotationRefined, EndometriosisGrade, MenstrualCyclePhase, epithelial.pseudotime, EndometriosisStatus) %>%
-  summarise(row_count = n()) %>%
-  ungroup() 
-
-#Bar plot
-#####use this for paper supplement
-#Bar plot split by main5 
-#MenstrualCyclePhase_sampleOrder <- readRDS(paste0(dir_out,"sampleorder_MenstrualCyclePhase_greenCirclemedian.RDS"))
-#df$sample <- factor(df$sample, levels = MenstrualCyclePhase_sampleOrder)
-P63 = createPalette(63, c("#ff0000", "#00ff00", "#0000ff")) 
-swatch(P63)
-names(P63) <- NULL
-#Make barplots with different seeds
-seed <- 1 #find in dir.create(paste0(dir_out, "/seedopt/"))
-set.seed(seed)  
-p <- ggplot(df, aes(x = sample, y = row_count, fill = AnnotationRefined)) +
-  geom_bar(stat = 'identity', position = 'fill') +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = sample(P63)) +
-  xlab('Sample ID') +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_line(colour = "lightgray", size = 0.5)
-  ) +
-  facet_grid(AnnotationMain ~ ., scales = "free_y")
-ggsave(paste0(dir_out, "/seedopt/Barplot_sample_AnnotationRefined_main5_", seed, ".pdf"),
-       plot = p,
-       width = 15, height = 6)
-
-
-
-##Consider leaving out
-a1 <- ggplot(df %>% select(sample, EndometriosisStatus) %>% distinct (), aes(x = sample, y = EndometriosisStatus, fill = EndometriosisStatus)) +
-  geom_bar(stat = 'identity', position = 'fill') +
-  xlab('Sample ID') +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_line(colour = "lightgray", size = 0.5)
-  ) 
-a2 <- ggplot(df %>% select(sample, MenstrualCyclePhase) %>% distinct (), aes(x = sample, y = MenstrualCyclePhase, fill = MenstrualCyclePhase)) +
-  geom_bar(stat = 'identity', position = 'fill') +
-  xlab('Sample ID') +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_line(colour = "lightgray", size = 0.5)
-  )
-a1 + a2 + plot_layout(nrow = 2)
-ggsave(paste0(dir_out, "Barplot_sample_AnnotationRefined_main5_annotation.pdf"),
-  plot = last_plot(),
-  width = 15, height = 6)
+  distinct() %>%
+  arrange(AnnotationRefined) %>%
+  mutate(AnnotationMain = factor(AnnotationMain, levels = c( "endothelial","stromal","lymphocyte","epithelial","myeloid"))) %>%
+  arrange(AnnotationMain)
+EndoAtlas$AnnotationRefined <- factor(x = EndoAtlas$AnnotationRefined, levels = order$AnnotationRefined)
+Fig1c <- DimPlot(EndoAtlas, reduction = "umap", group.by = "AnnotationRefined",  raster = FALSE)
+Fig1c
+ggsave(filename = paste0(dir_out, 'Fig1c.pdf'),
+       plot = Fig1c,
+       width =20, height=9)
 
 ```
 
-Figure 2 e
+Figure 1d
+CODE OK
 ```{r plotting of cell types per sample}
-##########################################################################
-#BoxPlots sample, AnnotationMain, EndometriosisGrade, MenstrualCyclePhase_main
-df2 <- meta%>%
+#Fig1d_1
+Fig1d_1 <- EndoAtlas_meta %>%
+  group_by(AnnotationMain) %>%
+  summarise(row_count = n()) %>% 
+  ggplot(aes(x = AnnotationMain, y = row_count)) +
+  geom_col() +
+  coord_flip()
+Fig1d_1
+ggsave(paste0(dir_out, "Fig1d_1.pdf"),
+  plot = last_plot(),
+  width = 15, height = 6)
+
+#Fig1d_2
+Fig1d_2 <- EndoAtlas_meta %>%
+  group_by(sample, AnnotationMain) %>%
+  summarise(row_count = n()) %>%
+  ggplot(aes(x = AnnotationMain, y = row_count)) +
+  geom_boxplot() +
+  scale_y_log10() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+Fig1d_2
+ggsave(paste0(dir_out, "Fig1d_2.pdf"),
+         plot = last_plot(),
+         width = 15, height = 6)
+
+#Fig1d_3 
+Fig1d_3 <- EndoAtlas_meta%>%
+  filter(!is.na(AnnotationMain)) %>%
+  group_by(AnnotationMain, EndometriosisGrade) %>%
+  summarise(row_count = n()) %>%
+  ggplot(aes(x = AnnotationMain, y = row_count, fill = EndometriosisGrade)) +
+  geom_bar(stat = 'identity', position = 'fill') +
+  scale_y_continuous(expand = c(0, 0)) +
+  coord_flip()
+Fig1d_3
+ggsave(paste0(dir_out, "Fig1d_3.pdf"),
+  plot = last_plot(),
+  width = 6, height = 4)
+
+```
+
+Figure 1e, 2a, S3a
+CODE running, need to extend the PCA analysis folder
+dir_out <- "/home/common/data/output/projects/ENDO/E044/A072/allcells_EndoAtlas_SCTassay/"
+
+```{r}
+p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas.rds"))
+#Figure 1e
+pdf(paste0(dir_out,"eigencorplot_final_BH.pdf"), width = 10, height = 5)
+eigencorplot(p,
+    metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
+    col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue'),
+    corMultipleTestCorrection = "BH"
+)
+dev.off()
+
+#Figure 2a
+biplot(p,
+    colby = 'MenstrualCyclePhase',
+    # ellipse config
+      ellipse = TRUE,
+      ellipseType = 't',
+      ellipseLevel = 0.90,
+      ellipseFill = TRUE,
+      ellipseAlpha = 1/4,
+      ellipseLineSize = 1.0,
+    labSize = 0,drawConnectors = FALSE,
+    legendPosition = 'top', legendLabSize = 16, legendIconSize = 8.0)
+
+#Supplementary Data Figure 3a
+biplot(p,
+    colby = 'EndometriosisStatus',
+    labSize = 0,drawConnectors = FALSE, 
+    hline = 0, vline = 0,
+    legendPosition = 'right')
+```
+
+Figure 2b
+CODE OK
+```{r}
+#Figure 2b entire atlas
+Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
+Fig2b_1
+ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
+       plot = Fig2b_1,
+       width =20, height=9)
+
+#Figure 2b epithelial cells
+Fig2b_2 <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
+Fig2b_2
+ggsave(filename = paste0(dir_out, 'Fig2b_2.pdf'),
+       plot = Fig2b_2,
+       width =20, height=9)
+
+```
+
+Figure 2c
+Look in IBU folder for object with trajectory line or A063/A066
+```{r}
+#Figure 2c epithelial cells
+epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
+
+#Pseudotime
+Fig2c <- plot_cells(epithelial_cells_monocle3, color_cells_by = "pseudotime",
+                     label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
+                     graph_label_size=3, cell_size = 1)
+Fig2c
+ggsave(filename = paste0(dir_out, 'Fig2c.pdf'),
+       plot = Fig2c,
+       width =20, height=9)
+```
+
+Figure 2d
+CODE OK
+```{r}
+#Remove samples 65 and 105, since these samples are just in between menstrual cycle phases and cannot be clearly assigned
+Idents(EndoAtlas) <- EndoAtlas$sample
+EndoAtlas_filtereds65s105 <- subset(EndoAtlas, subset = sample %in% setdiff(unique(EndoAtlas$sample), c("sample65", "sample105")))
+Idents(EndoAtlas_filtereds65s105) <- EndoAtlas_filtereds65s105$AnnotationMain
+
+#### Plot heatmaps for main cell type specific markers for the different menstrual cycle phases. Compare also Wang et al 2020 marker genes (Wang et al. 2020, DOI: 10.1038/s41591-020-1040-z)
+
+###########################
+### main epithelial marker genes for menstrual cycle phases
+
+# Subset celltype of interest
+EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = epithelial)
+#main epithelial marker genes for menstrual cycle phases
+epithelial_main <- c("SFRP4", "LAMC2", "MMP11", "MMP7", "SPRY1", "TFPI2","STEAP4","ADAMTS8","CAPN6","SLC37A2","SCGB1D2", "MT1F", "MT1X","RIMKLB", "S100P", "DEFB1","G0S2","NNMT","GPX3", "PAEP")
+
+# Do MultiBarHeatmap
+DoMultiBarHeatmap(object = data, features = epithelial_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
+# Save MultiBarHeatmap
+ggsave(
+    filename = paste0(dir_out, epithelial, "Fig2d_epithelial_DoMultiBarHeatmap.pdf"),
+    plot = last_plot(),
+    width = 15,
+    height = 8)
+
+##Plot our marker genes and Wang et al. 2020 marker genes (Wang et al. 2020, DOI: 10.1038/s41591-020-1040-z)
+#Wang et al. 2020 menstrual phase marker genes
+Wang_epithelial_mens_markers <- c("PLAU", "MMP7", "THBS1", "CADM1", "NPAS3", "ATP1A1", "ANK3", "ALPL", "TRAK1", "SCGB1D2", "MT1F", "MT1X", "MT1E", "MT1G", "CXCL14", "MAOA", "DPP4", "NUPR1", "GPX3", "PAEP")
+#Plot first our genes, then Wang genes
+heatmap <- DoHeatmap(
+  object = data,
+  features = c(setdiff(epithelial_main ,Wang_epithelial_mens_markers), Wang_epithelial_mens_markers),
+  cells = NULL,
+  group.by = "MenstrualCyclePhase",
+  group.bar = TRUE)
+#heatmap
+ggsave(
+    filename = paste0(dir_out, epithelial, "DoMultiBarHeatmap_epithelial_OursAndWangMarkers.pdf"),
+    plot = last_plot(),
+    width = 15,
+    height = 8)
+
+
+###########################
+### main stromal marker genes for menstrual cycle phases
+
+# Subset celltype of interest
+EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = stromal)
+#main stromal marker genes for menstrual cycle phases
+stromal_main <- c("SFRP1", "H1-1", "H3C2", "WNT5A","CILP","BRINP1", "CFD","PTGDS","SLIT3","RPRM", "TIMP3", "IGFBP1","LEFTY2","LRRC15","LUM")
+# Do MultiBarHeatmap
+DoMultiBarHeatmap(object = data, features = stromal_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
+# Save MultiBarHeatmap
+ggsave(
+    filename = paste0(dir_out, stromal, "Fig2d_stromal_DoMultiBarHeatmap.pdf"),
+    plot = last_plot(),
+    width = 15,
+    height = 10)
+
+##Plot our marker genes and Wang et al. 2020 marker genes (Wang et al. 2020, DOI: 10.1038/s41591-020-1040-z)
+#Wang et al. 2020 menstrual phase marker genes
+Wang_stromal_mens_markers <- c('STC1', 'NFATC2', 'BMP2' ,'PMAIP1' ,'MMP11' ,'SFRP1', 'WNT5A' ,'ZFYVE21' ,'CILP' ,'SLF2' ,'MATN2', 'S100A4' ,'DKK1' ,'CRYAB', 'FOXO1', 'IL15', 'FGF7', 'LMCD1')
+#Plot first our genes, then Wang genes
+heatmap <- DoHeatmap(
+  object = data,
+  features = c(setdiff(stromal_main ,Wang_stromal_mens_markers), Wang_stromal_mens_markers),
+  cells = NULL,
+  group.by = "MenstrualCyclePhase",
+  group.bar = TRUE)
+#heatmap
+ggsave(
+    filename = paste0(dir_out, stromal, "DoMultiBarHeatmap_stromal_OursAndWangMarkers.pdf"),
+    plot = last_plot(),
+    width = 15,
+    height = 15)
+
+
+###########################
+### main endothelial, myeloid and lymphocyte marker genes for menstrual cycle phases
+endothelial_main <- c("RGS16","DUOX1","CFD","MYC","TIMP3","LEFTY2","IL1B")
+myeloid_main <- c("S100A10","TREM2","STXBP2","CCL2","GNLY","CXCL3","CXCL2")
+lymphocyte_main <- c("IL7R","DUSP4","MMP26","MT1G","CXCL3","CXCL2","G0S2")
+
+#Make heatmaps in loop
+CELLTYPES <- c("endothelial","lymphocyte","myeloid") 
+for (CELLTYPE in CELLTYPES) {
+  # Subset celltype of interest
+  EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = CELLTYPE)
+  # Do MultiBarHeatmap
+  DoMultiBarHeatmap(object = EndoAtlas_filtereds65s105, 
+                  features = if (CELLTYPE == "endothelial") endothelial_main
+                              else if (CELLTYPE == "myeloid") myeloid_main
+                              else if (CELLTYPE == "lymphocyte") lymphocyte_main, 
+                  group.by="MenstrualCyclePhase", 
+                  additional.group.by="epithelial.pseudotime")
+  # Save MultiBarHeatmap
+  ggsave(
+    filename = paste0(dir_out, "Fig2d_", CELLTYPE, "_DoMultiBarHeatmap.pdf"),
+    plot = last_plot(),
+    width = 15,
+    height = 3)
+
+}
+
+###########################
+## Additional strong Menstrual cycle phase markers
+stromal_extended <- c("H1-1","H1-2","H1-4","H1-5","H2AC13","H2Ac14","H3C2","H4C3","MKI67","TNC", #prolif/periov
+                      "CALB2", "PENK","POSTN",#periovulatory
+                      "CAPN6", "CYP26A1","HGD","HLA-DMB","MMP26","UPK1B","TFPI2","ENPP3","PKHD1L1","CILP","CHODL","GDF15","SCGB1D2","SCGB1D4","SCGB2A1","CERNA2","CD9",#secretory_early
+                      "MT1E","MT1F","MT1G","MT1H","MT1M", "LINC01320",#secretory_early/_mid
+                      "ACKR1", #secretory_mid
+                      "BRINP1","C1QC","CCN3","CFD","GPX3","MPTL2","MUC16","MYC","PAEP","PDK4","PTGDS","RPRM","SLIT3","SLPI","SPP1","TGM2","TIMP3","TM1E","TM4SF1",
+                      "IGFBP1","IGFBP6","KRT7","LEFTY2","LMCD1","LRRC15","LUM","NID2","PLAGL1","PLAT","PRLR","RBP4","BAMBI","CAB39L","COMP", #secretory_late
+                      "APOD","CLDN4","CLU","CP","CXCL13","CXCL14","DEFB1","DEPP1","DKK1") #secretory_early/_mid/_late
+epithelial_extended <- unique(c("SFRP4", "LAMC2", "MMP11", "TMEM107", "C12orf75", "UBE2C", "CENPW", "H2AC11", "H3C3", "H2AC13", "CSF3", "CENPE","SPRY1", "TFPI2", "STEAP4", "CKB", "LRRC26", "SNX30", "ADAMTS8", "CAPN6", "FXYD4", "XDH","CCN3", "SLC37A2","MMP26", "SCGB1D2", "SCGB1D4", "CYP26A1", "ENPP3", "PTGDS",  "PLEKHH2", "ZBTB16", "STC1", "IGFBP5", "PDGFRA", "REV3L", "HSPA1A",   "MT1F", "MT1G", "PAEP", "RIMKLB", "S100P", "DEFB1", "G0S2", "GDF15", "C12orf75", "DEFB1", "SPP1", "DKK1", "NNMT", "RBP4"))
+endothelial_extended <- c("POSTN","RGS16","TFPI2", "SCGB1D4",  "CYP26A1","MT1G", "CFD", "FABP5","APLN","TIMP3","MYC","MUC16", "NAPSB", "LEFTY2","IL1B", "COMP")
+myeloid_extended <- c("TREM2",  "PHYHIPL", "PAEP", "RIMKLB", "LEFTY2", "IL2RB", "APOD", "NNMT",  "STXBP2","GNLY", "S100A10", "OLR1", "MUC16", "CXCL13",  "INSIG1", "GZMA",  "PLAUR",  "MMP26",  "RGCC", "IGSF6",  "C15orf48", "UBD", "CCL19",  "FBP1", "CCL2", "FCN1", "CXCL3", "CORO1A","MT1G","INHBA", "CXCL5", "MMP10","SERPINB2","MMP1", "CCL18","SLC7A5","CCL20","THBS1","AREG", "APOC1","SERPINA1")
+lymphocyte_extended <- c("CAPN6","MT1H",  "ENPP3",  "TFPI2", "CLDN3", "DUSP4", "PDK4", "MMP26", "CXCL13", "GIMAP4",  "RIMKLB", "MT1G", "DEFB1", "CFD","IL7R", "LDLRAD4", "LEFTY2", "DOCK10", "CYP26A1", "G0S2","MTND1P23")
+
+
+```
+
+Figure 2e
+CODE OK
+```{r plotting of cell types per sample}
+##Boxplots of main cell types cell frequency as a percentage of total cells, split by menstrual cycle phase and endometriosis status
+
+#Prepare data for boxplot
+df2 <- EndoAtlas_meta%>%
   filter(Minor.exclusion.criteria.logical == "FALSE") %>%
-  group_by(sample, AnnotationMain, EndometriosisGrade, MenstrualCyclePhase_main, EndometriosisStatus) %>% #no sample, AnnotationMain combinations are dropped
+  group_by(sample, AnnotationMain, EndometriosisGrade, MenstrualCyclePhase_main, EndometriosisStatus) %>%
   summarise(row_count = n()) %>%
   ungroup() %>%
   filter(!is.na(AnnotationMain)) %>%
@@ -218,7 +432,7 @@ df2 <- meta%>%
   mutate(AnnotationMain_perc = row_count / sum(row_count) * 100) %>%
   ungroup()
 
-#BoxPlots percentage, EndometriosisStatus #for publication
+#BoxPlots percentage, EndometriosisStatus 
 ggplot(df2, aes(x = MenstrualCyclePhase_main, y = AnnotationMain_perc, fill = EndometriosisStatus)) +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(colour = EndometriosisStatus),
@@ -227,7 +441,7 @@ ggplot(df2, aes(x = MenstrualCyclePhase_main, y = AnnotationMain_perc, fill = En
   RotatedAxis() +
   xlab('Sample ID') +
   facet_wrap(~AnnotationMain,scales = "free", ncol = 6)
-ggsave(paste0(dir_out, "Boxplot_MenstrualCyclePhase_main_main5_sample_EndometriosisStatus_perc_publication.pdf"),
+ggsave(paste0(dir_out, "Fig2e_boxplot.pdf"),
   plot = last_plot(),
   width = 12, height = 4.4)
 
@@ -265,133 +479,12 @@ df2_ttest_PeriSec <- df2 %>%
 #epi (0.00794) and str (0.0137) significant
 ```
 
-Supplementary Data Figure 4b, delete?
-```{r plotting of cell types per sample}
-##########################################################################################
-##Plot differences for DEG analysis samples
-#Extract sample names of samples used for DEG analysis
-#DEGsamples <- unique(read.csv("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/celltype_freq_sample.csv")$Var2)
-
-DEGsamples <- SupplementaryTable1 %>%
-  filter(DEG.analysis..Figure.3a.b. == TRUE) %>%
-  pull(Patient.sample.ID)
-
-#Make df 
-#Introduce 0 for the ones with 0 count!
-df3 <- meta%>%
-  group_by(sample, AnnotationRefined) %>%
-  summarise(AnnotationRefined_counts = n()) %>%
-  ungroup() %>%
-  complete(sample, AnnotationRefined, fill = list(AnnotationRefined_counts = 0)) %>%
-  filter(!is.na(AnnotationRefined)) %>%
-  group_by(sample) %>%
-  mutate(AnnotationRefined_perc = AnnotationRefined_counts / sum(AnnotationRefined_counts) * 100) %>%
-  ungroup()  %>% #60 samples * 63 cell types = 3780 rows, correct
-  filter(sample %in% DEGsamples) #23 samples * 63 cell types = 1449 rows, correct
-df3 <- left_join(df3, dplyr::distinct(meta[,c("sample","EndometriosisStatus")]), by = "sample")
-
-# Perform t-test for each cell type
-df3_ttest <- df3 %>%
-  group_by(AnnotationRefined) %>%
-  summarise(p.value = t.test(AnnotationRefined_perc ~ EndometriosisStatus)$p.value) %>%
-  ungroup()
-#No significant difference between the EndometriosisStatus in any cell type
-
-###Plot
-#BoxPlots percentage, EndometriosisStatus, percentage
-ggplot(df3, aes(x = AnnotationRefined, y = AnnotationRefined_perc, fill = EndometriosisStatus)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_point(aes(colour = EndometriosisStatus),
-             colour="black",pch=21, 
-             position = position_jitterdodge(jitter.width = 0.2)) +
-  facet_wrap(~AnnotationRefined, scales = "free", ncol = 7)
-ggsave(paste0(dir_out, "Boxplot_DEGsamples_SymphonyRefinedFinal_EndometriosisStatus_perc.pdf"),
-  plot = last_plot(),
-  width = 17, height = 12)
-```
-
-Supplementary Data Figure 4b
-```{r plotting of cell types per sample}
-##########################################################################################
-##Plot differences for samples without minor exclusion criteria
-
-#Make df 
-#Introduce 0 for the ones with 0 count!
-df4 <- meta%>%
-  filter(Minor.exclusion.criteria.logical == "FALSE") %>%
-  group_by(sample, AnnotationRefined) %>%
-  summarise(AnnotationRefined_counts = n()) %>%
-  ungroup() %>%
-  complete(sample, AnnotationRefined, fill = list(AnnotationRefined_counts = 0)) %>%
-  filter(!is.na(AnnotationRefined)) %>%
-  group_by(sample) %>%
-  mutate(AnnotationRefined_perc = AnnotationRefined_counts / sum(AnnotationRefined_counts) * 100) %>%
-  ungroup() %>% #60 samples * 63 cell types = 3780 rows, correct
-  filter(!sample %in% c("sample81", "sample87", "sample108", "sample115", "sample119", "sample121"))  #54 samples * 63 cell types = 3402 rows, correct
-df4 <- left_join(df4, dplyr::distinct(meta[,c("sample","EndometriosisStatus","MenstrualCyclePhase_main")]), by = "sample")
-write.csv(df4, paste0(dir_out,"df4_AnnotationRefined_frequency.csv"))
-
-# Perform t-test CTL vs Endo for each cell type grouped by AnnotationRefined, MenstrualCyclePhase_main
-df4_ttest_EndometriosisStatus <- df4 %>%
-  group_by(AnnotationRefined, MenstrualCyclePhase_main) %>%
-  summarise(p.value = t.test(AnnotationRefined_perc ~ EndometriosisStatus)$p.value) %>%
-  ungroup()
-#Prv_VSMC secretory, secretory is the only significant one (pval 0.009075467)!!
-df4_ttest_EndometriosisStatus$p.value_adjBH <- p.adjust(df4_ttest_EndometriosisStatus$p.value, method = "BH", n = length(df4_ttest_EndometriosisStatus$p.value))
-#After correction for multiple testing Prv_VSMC secretory is not significant anymore
-
-df4_ttest_EndometriosisStatus_secretory <- df4_ttest_EndometriosisStatus %>%
-                      filter(MenstrualCyclePhase_main == "secretory")
-df4_ttest_EndometriosisStatus_secretory$p.value_adjBH <- p.adjust(df4_ttest_EndometriosisStatus_secretory$p.value, method = "BH", n = length(df4_ttest_EndometriosisStatus_secretory$p.value))
-#Even when subsetting secretory phase, after correction for multiple testing Prv_VSMC secretory is not significant anymore
-
-## Perform t-test Prolif vs Peri for each cell type
-df4_ttest_ProlifPeri <- df4 %>%
-  dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative","periovulatory")) %>%
-  group_by(AnnotationRefined) %>%
-  summarise(p.value = t.test(AnnotationRefined_perc ~ MenstrualCyclePhase_main)$p.value) %>%
-  ungroup()
-#Few significant
-## Perform t-test Prolif vs Sec for each cell type
-df4_ttest_ProlifSec <- df4 %>%
-  dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative","secretory")) %>%
-  group_by(AnnotationRefined) %>%
-  summarise(p.value = t.test(AnnotationRefined_perc ~ MenstrualCyclePhase_main)$p.value) %>%
-  ungroup()
-write.csv(df4_ttest_ProlifSec, paste0(dir_out,"df4_ttest_ProlifSec.csv"))
-df4_ttest_ProlifSec <- read.csv(paste0(dir_out,"df4_ttest_ProlifSec.csv"))
-df4_ttest_ProlifSec$p.value_adjBH <- p.adjust(df4_ttest_ProlifSec$p.value, method = "BH", n = length(df4_ttest_ProlifSec$p.value))
-write.csv(df4_ttest_ProlifSec, paste0(dir_out,"df4_ttest_ProlifSec_adjpval.csv"))
-
-
-#About half are significant, show in paper supplement
-## Perform t-test periovulatory vs sec for each cell type
-df4_ttest_PeriSec <- df4 %>%
-  dplyr::filter(MenstrualCyclePhase_main %in% c("periovulatory","secretory")) %>%
-  group_by(AnnotationRefined) %>%
-  summarise(p.value = t.test(AnnotationRefined_perc ~ MenstrualCyclePhase_main)$p.value) %>%
-  ungroup()
-#Less than half are significant, don't show in paper supplement
-
-#BoxPlots percentage, EndometriosisStatus, percentage ###for paper Extended Data Fig. S4
-ggplot(df4, aes(x = MenstrualCyclePhase_main, y = AnnotationRefined_perc, fill = EndometriosisStatus)) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_point(aes(colour = EndometriosisStatus),
-             colour="black",pch=21, 
-             position = position_jitterdodge(jitter.width = 0.2)) +
-  facet_wrap(~AnnotationRefined, scales = "free", ncol = 7) +
-  theme_bw() +
-  expand_limits(y = 0)
-  
-ggsave(paste0(dir_out, "Boxplot_DEGsamples_SymphonyRefinedFinal_EndometriosisStatus_perc.pdf"),
-  plot = last_plot(),
-  width = 20, height = 12)
-```
 
 Figure 2f
+CODE OK
 ```{r plotting of cell types per sample}
 #Early and Mid Secretory Prv_VSMCs 
-df4 <- meta%>%
+Fig2f <- EndoAtlas_meta%>%
   filter(Minor.exclusion.criteria.logical == "FALSE") %>%
   group_by(sample, AnnotationRefined) %>%
   summarise(AnnotationRefined_counts = n()) %>%
@@ -402,9 +495,9 @@ df4 <- meta%>%
   mutate(AnnotationRefined_perc = AnnotationRefined_counts / sum(AnnotationRefined_counts) * 100) %>%
   ungroup() %>% #60 samples * 63 cell types = 3780 rows, correct
   filter(!sample %in% c("sample81", "sample87", "sample108", "sample115", "sample119", "sample121"))  #54 samples * 63 cell types = 3402 rows, correct
-df4 <- left_join(df4, dplyr::distinct(meta[,c("sample","EndometriosisStatus","MenstrualCyclePhase_main","MenstrualCyclePhase")]), by = "sample")
+Fig2f <- left_join(Fig2f, dplyr::distinct(EndoAtlas_meta[,c("sample","EndometriosisStatus","MenstrualCyclePhase_main","MenstrualCyclePhase")]), by = "sample")
 
-secEarylMid_Prv_VSMC_MenstrualCyclePhase_main <- df4 %>%
+secEarylMid_Prv_VSMC_MenstrualCyclePhase_main <- Fig2f %>%
   filter(AnnotationRefined %in% c("Prv_VSMC secretory", "Prv_VSMC secretory_late")) %>% #same result with and without "Prv_VSMC secretory_late"
   dplyr::filter(MenstrualCyclePhase %in% c("proliferative","periovulatory","secretory_mid","secretory_early")) %>%
   group_by(sample, EndometriosisStatus, MenstrualCyclePhase_main) %>%
@@ -419,142 +512,173 @@ ggplot(secEarylMid_Prv_VSMC_MenstrualCyclePhase_main, aes(x = MenstrualCyclePhas
   geom_point(aes(colour = EndometriosisStatus),
              colour="black",pch=21, 
              position = position_jitterdodge(jitter.width = 0.2))
-ggsave(paste0(dir_out, "Boxplot_sec_Prv_VSMC_NOsecretory_late_total_perc_MenstrualCyclePhase_main_EndometriosisStatus.pdf"),
+ggsave(paste0(dir_out, "Fig2f_boxplot.pdf"),
   plot = last_plot(),
   width = 17, height = 12)
 
+#Statistical testing
 secEarylMid_Prv_VSMC_MenstrualCyclePhase_main_pval <- secEarylMid_Prv_VSMC_MenstrualCyclePhase_main %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("secretory")) %>% 
   summarise(p.value = t.test(total_perc_MenstrualCyclePhase_main ~ EndometriosisStatus)$p.value) %>%
   ungroup()
-#significant, p.value 0.0261 -> paper
+#significant, p.value 0.0261
 
 secEarylMid_Prv_VSMC_MenstrualCyclePhase_main_pval_prolif <- secEarylMid_Prv_VSMC_MenstrualCyclePhase_main %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative")) %>% 
   summarise(p.value = t.test(total_perc_MenstrualCyclePhase_main ~ EndometriosisStatus)$p.value) %>%
   ungroup()
-#significant, p.value NA
+#not significant, p.value NA
 
 secEarylMid_Prv_VSMC_MenstrualCyclePhase_main_pval_peri <- secEarylMid_Prv_VSMC_MenstrualCyclePhase_main %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("periovulatory")) %>% 
   summarise(p.value = t.test(total_perc_MenstrualCyclePhase_main ~ EndometriosisStatus)$p.value) %>%
   ungroup()
-#significant, p.value 0.7639853 
+#not significant, p.value 0.7639853 
 
+#Multiple testing correction
 p.adjust(c(0.0261), method = "BH", n = length(3)) #Value does not change
 p.adjust(c(0.7639853), method = "BH", n = length(3)) #Value does not change
 
-#Calculate fold change ENDO vs nonENDO secretory
-# Assuming secEarylMid_Prv_VSMC_MenstrualCyclePhase_main is your dataframe
-
-library(dplyr)
-
-# Filter the dataframe for 'secretory' in MenstrualCyclePhase_main and then group by EndometriosisStatus
-mean_total_perc <- secEarylMid_Prv_VSMC_MenstrualCyclePhase_main %>%
-  filter(MenstrualCyclePhase_main == "secretory") %>%
-  group_by(EndometriosisStatus) %>%
-  summarize(mean_total_perc = mean(total_perc_MenstrualCyclePhase_main))
-```
-
-Figure 1d
-```{r plotting of cell types per sample}
-p5 <- ggplot(df5, aes(x = AnnotationMain, y = row_count)) +
-  geom_col() +
-  #theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  coord_flip()
-p5
-ggsave(paste0(dir_out, "Barplot_EndometriosisGrade_main5.pdf"),
-  plot = last_plot(),
-  width = 15, height = 6)
-
-#main5 boxplot 
-df6 <- meta%>%
-  group_by(sample, AnnotationMain, EndometriosisGrade) %>%
-  summarise(row_count = n()) %>%
-  ungroup()
-p6 <- ggplot(df6, aes(x = AnnotationMain, y = row_count)) +
-  geom_boxplot() +
-  #geom_jitter(position = position_jitter(width = 0.2, height = 0), size = 0.5) +
-  scale_y_log10() +
-  coord_flip() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p6
-ggsave(paste0(dir_out, "Boxplot_EndometriosisGrade_main5_colEndometriosisGrade.pdf"),
-         plot = last_plot(),
-         width = 15, height = 6)
-
-# bar plot of the number of AnnotationRefined cells in each sample
-df7 <- meta%>%
-  filter(!is.na(AnnotationMain)) %>%
-  group_by(AnnotationMain, EndometriosisGrade) %>%
-  summarise(row_count = n()) %>%
-  ungroup() 
-ggplot(df7, aes(x = AnnotationMain, y = row_count, fill = EndometriosisGrade)) +
-  geom_bar(stat = 'identity', position = 'fill') +
-  scale_y_continuous(expand = c(0, 0)) +
-  coord_flip()
-ggsave(paste0(dir_out, "Barplot_AnnotationMain_EndometriosisGrade.pdf"),
-  plot = last_plot(),
-  width = 6, height = 4)
 
 ```
 
-UMAPs
 
-epithelial UMAP
-2b,2c,3b,3e,
-
-atlas UMAP
-S3f, S7a
-
-
-Figure 1c
+Figure 3a and 3b
 ```{r}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-#data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-A003A033 <- readRDS("/home/common/data/output/projects/ENDO/E044/A074/dataA003A033_metadata_ptime_snn_Final.rds")
-table(A003A033$AnnotationRefined)
-data <- AddMetaData(data,A003A033)
-E031A004meta <- read.csv("/home/common/data/output/projects/ENDO/E044/A033/E031A004_proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated_meta.csv")
-E031A004meta$cell_id <- paste(E031A004meta$sample, E031A004meta$cell.names, sep = "_")
-rownames(E031A004meta) <- E031A004meta$cell_id 
-data <- AddMetaData(data, E031A004meta[, "Annotation", drop = FALSE])
 
-order <- A003A033 %>%
-  select(AnnotationMain, AnnotationRefined) %>%
-  filter(!is.na(AnnotationMain)) %>%
+DEGs
+E044A031
+
+
+
+
+```
+
+Figure 3c-h
+```{r}
+
+CellChat
+E044A076
+#cellchat <-readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
+dir_out <- "/home/common/data/output/projects/ENDO/E044/A076/"
+
+#Figure 3c and Supplementary Figure 5b
+gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
+gk1 
+ggsave(plot = gk1,
+       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
+
+
+#Figure 3d (or was it done separately? xxx)
+setwd(paste0(dir_out,"output_comparison_Refined"))
+###circle plot
+pathways.show <- c("TNF") 
+object.list <- list(Endo = cellchat.Endo, Cntrl = cellchat.Cntrl)
+weight.max <- getMaxWeight(object.list, slot.name = c("netP"), attribute = pathways.show) 
+par(mfrow = c(1,2), xpd=TRUE)
+for (i in 1:length(object.list)) {
+  netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "circle", edge.weight.max = weight.max[1], edge.width.max = 10, signaling.name = paste(pathways.show, names(object.list)[i]))
+}
+
+# Save plot
+pdf(file = "EndoCtl_TNF_circle_plot_edge10.pdf")
+par(mfrow = c(1, length(object.list)), xpd = TRUE)
+for (i in 1:length(object.list)) {
+  netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "circle", edge.weight.max = weight.max[1], edge.width.max = 10, signaling.name = paste(pathways.show, names(object.list)[i]))
+}
+dev.off()
+
+# Save plot
+pdf(file = "EndoCtl_TNF_circle_plot_edge15.pdf")
+par(mfrow = c(1, length(object.list)), xpd = TRUE)
+for (i in 1:length(object.list)) {
+  netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "circle", edge.weight.max = weight.max[1], edge.width.max = 10, signaling.name = paste(pathways.show, names(object.list)[i]))
+}
+dev.off()
+####################
+
+
+#Load CellChat data
+cellchat <- readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
+
+#Figure 3e ICAM
+netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("ICAM"), remove.isolate = FALSE) 
+ggsave(plot = last_plot(),
+       filename = paste0(dir_out, 'output_comparison_Refined/netVisual_bubble_ICAM.pdf'), width =25,height=5)
+
+#Figure 3f CXCL
+#Load data
+netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("CXCL"), remove.isolate = FALSE) 
+ggsave(plot = last_plot(),
+       filename = paste0(dir_out, 'output_comparison_Refined/netVisual_bubble_CXCL.pdf'), width =25,height=7)
+
+#Figure 3g VEGF
+netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("VEGF"), remove.isolate = FALSE) # sources.use = 4, targets.use = c(5:11),
+ggsave(plot = last_plot(),
+       filename = paste0(dir_out, 'output_comparison_Refined/netVisual_bubble_VEGF.pdf'), width =15,height=5)
+
+#Figure 3h IGFBP
+netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("IGFBP"), remove.isolate = FALSE,targets.use = c(5:11)) 
+ggsave(plot = last_plot(),
+       filename = paste0(dir_out, 'output_comparison_Refined/netVisual_bubble_IGFBP.pdf'), width =15,height=5)
+
+
+
+
+```
+
+
+
+###########################################
+Supplementary Data Figures
+###########################################
+
+
+Supplementary Data Figure 1a and 1b
+CODE OK
+```{r VlnPlots of nCounts and nFeatures}
+##VlnPlots for "nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT"
+VlnPlot(EndoAtlas,
+  features = c("nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT"),
+  group.by='EndometriosisStatus', ncol = 1, pt.size=0)
+ggsave(paste0(dir_out, "VlnPlot_GroupByEndometriosisStatus_nFeature_nCounts_RNA_SCT_percMT.pdf"),
+  plot = last_plot(),
+  width = 4, height = 13)
+
+```
+
+```{r different counts and means/medians}
+#Percentage of main 5
+table <- as.data.frame(table(EndoAtlas_meta$AnnotationMain))
+table$Percentage <- round((table$Freq / sum(table$Freq)) * 100, 1)
+
+#Number of cells for CTL and Endo
+table(EndoAtlas_meta$EndometriosisStatus)
+
+#Number of patients for CTL and Endo
+EndoAtlas_meta %>% select(sample,EndometriosisStatus) %>%
   distinct() %>%
-  arrange(AnnotationRefined) %>%
-  mutate(AnnotationMain = factor(AnnotationMain, levels = c( "endothelial","stromal","lymphocyte","epithelial","myeloid"))) %>%
-  arrange(AnnotationMain)
-data$AnnotationRefined <- factor(x = data$AnnotationRefined, levels = order$AnnotationRefined)
-p24 <- DimPlot(data, reduction = "umap", group.by = "AnnotationRefined",  raster = FALSE)
-p24
+  group_by(EndometriosisStatus) %>%
+  summarize(number_of_rows = n())
 
-```
+#mean number of cells per sample
+mean(table(EndoAtlas_meta$sample))
 
-Figure 2b
-```{r}
-#Figure 2b entire atlas
-Fig2b1 <- DimPlot(data, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
-Fig2b1
-ggsave(filename = paste0(dir_out, 'Fig2b1.pdf'),
-       plot = Fig2b1,
-       width =20, height=9)
-
-#Figure 2b epithelial cells
-Fig2b2 <- DimPlot(data, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
-Fig2b2
-ggsave(filename = paste0(dir_out, 'Fig2b2.pdf'),
-       plot = Fig2b2,
-       width =20, height=9)
-
-
+#median count/feature
+median_summary <- EndoAtlas_meta %>%
+  select(nCount_RNA, nCount_SCT, nFeature_RNA, nFeature_SCT) %>%
+  summarize(
+    median_nCount_RNA = median(nCount_RNA),
+    median_nCount_SCT = median(nCount_SCT),
+    median_nFeature_RNA = median(nFeature_RNA),
+    median_nFeature_SCT = median(nFeature_SCT)
+  )
 ```
 
 Supplementary Data Figure 1c
+CODE OK
 ```{r}
-SFig1c <- FeaturePlot(data, features = "CycleDay", raster = FALSE)
+SFig1c <- FeaturePlot(EndoAtlas, features = "CycleDay", raster = FALSE)
 SFig1c
 ggsave(filename = paste0(dir_out, 'SFig1c.pdf'),
        plot = SFig1c,
@@ -562,8 +686,9 @@ ggsave(filename = paste0(dir_out, 'SFig1c.pdf'),
 ```
 
 Supplementary Data Figure 1d
+CODE OK
 ```{r}
-SFig1d <- FeaturePlot(data, features = "ProgesteroneSerum", raster = FALSE)
+SFig1d <- FeaturePlot(EndoAtlas, features = "ProgesteroneSerum", raster = FALSE)
 SFig1d
 ggsave(filename = paste0(dir_out, 'SFig1d.pdf'),
        plot = SFig1d,
@@ -571,176 +696,253 @@ ggsave(filename = paste0(dir_out, 'SFig1d.pdf'),
 
 ```
 
-Supplementary Data Figure 3e
-/home/common/data/output/projects/ENDO/E044/A066/phase_sc_Fig3_Wang_epi_pseudot/evaluation/ #S3c/d
-```{r plott umaps of epithelial cells}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A062/E044A050_seed621_filteredWO_ciliatedMesothelialMUC5B.rds")
-A003A033 <- readRDS("/home/common/data/output/projects/ENDO/E044/A074/dataA003A033_metadata_ptime_snn_Final.rds")
-table(A003A033$AnnotationRefined)
-data <- AddMetaData(data,A003A033)
-data <- AddMetaData(data, meta_ptime)
-data$epithelial.pseudotime <- as.integer(data$epithelial.pseudotime)
-data$Fig3_Wang_epi_pseudot[is.na(data$Fig3_Wang_epi_pseudot)] <- 1 #checked samples
+Supplementary Data Figure 1e
 
-  
-#General Plotting
-p1 <- FeaturePlot(data, features = "ProgesteroneSerum", split.by = "EndometriosisStatus")
-p2 <- DimPlot(data, group.by = "EndometriosisStatus", split.by = "CyclePhase")
-p3 <- DimPlot(data, split.by = "Clusters", group.by = "EndometriosisStatus")
-#plot_grid(p1,p2,p3, ncol=1)
-ggsave(filename = paste0(dir_out, 'EpiUMAP_general.pdf'),
-       plot = plot_grid(p1,p2,p3, ncol=1),
-       width =8 ,height=10)
+```{r}
+dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
 
-#Plotting of mens cycle info
-p1 <- DimPlot(data, group.by = "Fig3_Wang_epi_pseudot")
-p2 <- DimPlot(data, group.by = "MenstrualCyclePhase")
+p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_DEGsamples.rds"))
 
-#FeaturePlot(seurat_obj, features = "trajectory_day567_epithelial.pseudotime")
-#plot_grid(p1,p2,p3,p4,p5,p6, ncol=3)
-
-ggsave(filename = paste0(dir_out, 'EpiUMAP_PhasePrediction_w11.pdf'),
-       plot = plot_grid(p1,p2, ncol=2),
-       width =11 ,height=5)
-
-
+#Figure 1e
+pdf(paste0(dir_out,"eigencorplot_final_BH.pdf"), width = 10, height = 5)
+eigencorplot(p,
+    metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
+    col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue'),
+    corMultipleTestCorrection = "BH"
+)
+dev.off()
 ```
 
-```{r plotting umaps of entire dataset}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-#data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-A003A033 <- readRDS("/home/common/data/output/projects/ENDO/E044/A074/dataA003A033_metadata_ptime_snn_Final.rds")
-table(A003A033$AnnotationRefined)
-data <- AddMetaData(data,A003A033)
-E031A004meta <- read.csv("/home/common/data/output/projects/ENDO/E044/A033/E031A004_proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated_meta.csv")
-E031A004meta$cell_id <- paste(E031A004meta$sample, E031A004meta$cell.names, sep = "_")
-rownames(E031A004meta) <- E031A004meta$cell_id 
-data <- AddMetaData(data, E031A004meta[, "Annotation", drop = FALSE])
+Supplementary Data Figure 1f
+CODE OK
+"/home/common/data/output/projects/ENDO/E044/A082/SCTassay/"
+```{r}
 
-#Plot clusters, batch,sample EndometriosisStatus, cycle phase
-p1 <- DimPlot(data, reduction = "umap", group.by = "EndometriosisStatus", raster = FALSE)
-p2 <- DimPlot(data, reduction = "umap", group.by = "batch", raster = FALSE)
-p3 <- DimPlot(data, reduction = "umap", group.by = "sample", raster = FALSE) +
-  theme(legend.text = element_text(size=4))+
-  theme(legend.key.size = unit(0.2, 'cm'))+  guides(color = guide_legend(ncol=1) )
-p4 <- DimPlot(data, reduction = "umap", group.by = "celline", raster = FALSE)
-p5 <- DimPlot(data, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
-p6 <- DimPlot(data, reduction = "umap", group.by = "AnnotationMain", raster = FALSE)
-p7 <- DimPlot(data, reduction = "umap", group.by = "Symphony_Refined_A029", raster = FALSE)
-p8 <- DimPlot(data, reduction = "umap", group.by = "CyclePhase", raster = FALSE)
-p9 <- FeaturePlot(data, features = "ProgesteroneSerum", raster = FALSE)
-ggsave(filename = paste0(dir_out, 'UMAPs_p1p9.pdf'),
-       plot = plot_grid(p1,p2,p3,p4,p6,p7,p5,p8,p9, ncol=3),
-       width =28 ,height=24)
-ggsave(filename = paste0(dir_out, 'UMAPs_p1p9.png'),
-       plot = plot_grid(p1,p2,p3,p4,p6,p7,p5,p8,p9, ncol=3),
-       width =28 ,height=24)
+#Define subsets of main annotation
+subsets <- c("myeloid", "endothelial", "epithelial", "lymphocyte","stromal")
 
-p10 <- DimPlot(data, reduction = "umap", group.by = "AnnotationMain", raster = FALSE)
-p11 <- FeaturePlot(data, reduction = "umap", features = "Symphony_Global_prob", raster = FALSE)
-p12 <- DimPlot(data, reduction = "umap", group.by = "Symphony_Refined", raster = FALSE)
-p13 <- FeaturePlot(data, reduction = "umap", features = "Symphony_Refined_prob", raster = FALSE)
-p14 <- DimPlot(data, reduction = "umap", group.by = "AnnotationRefined", raster = FALSE)
-ggsave(filename = paste0(dir_out, 'UMAPs_p10p14.pdf'),
-       plot = plot_grid(p10,p11,p12,p13,p14, ncol=3),
-       width =28 ,height=16)
+#Plot eigencorplots for the main annotations
+plotting_PCA <- function(SUBSET) {
+    p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_",SUBSET,".rds"))
+      
+    pdf(paste0(dir_out,"eigencorplot_final_BH_",SUBSET,".pdf"), width = 10, height = 5)
+    eigencorplot(p,
+    metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
+    col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue'),
+    corMultipleTestCorrection = "BH"
+    )
+    dev.off()
+}
 
-p20 <- DimPlot(data, reduction = "umap", group.by = "batch", raster = FALSE)
-p21 <- FeaturePlot(data, reduction = "umap", features = "ProgesteroneSerum", raster = FALSE)
-p22 <- FeaturePlot(data, reduction = "umap", features = "CycleDay", raster = FALSE)
-p23 <- DimPlot(data, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
+lapply(subsets, plotting_PCA)
+```
 
-#Order data by main5
-###In progress
-order <- A003A033 %>%
-  select(AnnotationMain, AnnotationRefined) %>%
-  filter(!is.na(AnnotationMain)) %>%
-  distinct() %>%
-  arrange(AnnotationRefined) %>%
-  mutate(AnnotationMain = factor(AnnotationMain, levels = c( "endothelial","stromal","lymphocyte","epithelial","myeloid"))) %>%
-  arrange(AnnotationMain)
-data$AnnotationRefined <- factor(x = data$AnnotationRefined, levels = order$AnnotationRefined)
-p24 <- DimPlot(data, reduction = "umap", group.by = "AnnotationRefined",  raster = FALSE)
-p24
-data$Fig3_Wang_epi_pseudot[is.na(data$Fig3_Wang_epi_pseudot)] <- 1 #checked samples
-p25 <- DimPlot(data, reduction = "umap", group.by = "Fig3_Wang_epi_pseudot",na.value = "",  raster = FALSE)
-p25
-#Highlight cycling fibroblasts
-Idents(data) <- data$Annotation
-table(data$Annotation)
-cyclingfibs <- WhichCells(data, idents = c("Cycling Fibroblasts"))
-p26 <- DimPlot(data, reduction = "umap", cells.highlight = cyclingfibs, cols.highlight = c("darkred"), cols= "grey", raster = FALSE)
-p26
 
-plot_grid(p20,p21,p22,p23, ncol=2)
-ggsave(filename = paste0(dir_out, 'UMAPs_p20p23.pdf'),
-       plot = plot_grid(p20,p21,p22,p23, ncol=2),
-       width =24, height=18)
-ggsave(filename = paste0(dir_out, 'UMAPs_p20p23.png'),
-       plot = plot_grid(p20,p21,p22,p23, ncol=2),
-       width =24, height=18)
-ggsave(filename = paste0(dir_out, 'UMAPs_p24.pdf'),
-       plot = p24,
-       width =20, height=9)
-ggsave(filename = paste0(dir_out, 'UMAPs_p24.png'),
-       plot = p24,
-       width =20, height=9)
-ggsave(filename = paste0(dir_out, 'UMAPs_p25.pdf'),
-       plot = p25,
-       width =13, height=9)
-ggsave(filename = paste0(dir_out, 'UMAPs_p25.png'),
-       plot = p25,
-       width =13, height=9)
-ggsave(filename = paste0(dir_out, 'UMAPs_p26.pdf'),
-       plot = p26,
-       width =13, height=9)
-ggsave(filename = paste0(dir_out, 'UMAPs_p26.png'),
-       plot = p26,
-       width =13, height=9)
+Supplementary Data Figure 2
+CODE OK
+```{refined cluster markers}
 
-#Plot objects with split.by sample
-p15 <- DimPlot(data, split.by = "sample", raster = FALSE)
-ggsave(plot = p15, filename = paste0(dir_out,'A003_samples.pdf'),width =45 ,height=5)
-
-#Plot objects with split.by EndometriosisStatus
-p16 <- DimPlot(data, split.by = "EndometriosisStatus", raster = FALSE)
-ggsave(plot = p16, filename = paste0(dir_out,'A003_EndometriosisStatus.pdf'),width =15 ,height=5)
-
-rm(data)
+# Set SCT as default and remove RNA to save space
+DefaultAssay(EndoAtlas) <- "SCT"
+EndoAtlas@assays$RNA <- NULL
 gc()
+# Remove data without annotation (no NAs!)
+Idents(EndoAtlas) <- EndoAtlas$AnnotationMain
+EndoAtlas <- subset(EndoAtlas, subset = AnnotationMain %in% levels(as.factor(AnnotationMain$Symphony_Refined)))
+gc()
+
+### AnnotationMain markers
+genes_to_plot <- c("EPCAM","CDH1","PDGFRA","COL1A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2") #correct xxx
+pops_to_plot <- c("stromal","epithelial","myeloid","lymphocyte","endothelial")
+# DotPlot
+Seurat::DotPlot(
+  object = EndoAtlas,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = last_plot(), "./SFig2_AnnotationMain.pdf", width = 10, height = 5)
+
+
+###Set identity to AnnotationRefined
+Idents(EndoAtlas) <- EndoAtlas$AnnotationRefined
+
+### DC markers (from Tan2022 Fig. 5a)
+genes_to_plot <- c("CD1C", "CLEC9A", "LAMP3")
+pops_to_plot <- c("mDC", "cDC1", "DC3", "cDC2", "pre-cDC2")
+# reorder clusters
+pops_seurat <- subset(EndoAtlas, idents = pops_to_plot)
+pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
+                            levels=pops_to_plot)
+# DotPlot
+p <- Seurat::DotPlot(
+  object = pops_seurat,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = p, "./dotplots/Tan2022Fig3b_DCs_SCT.pdf", width = 5, height = 7)
+
+
+### Lymphocytes markers (from Tan2022 Fig. 4b)
+genes_to_plot <- c("FCGR3A","KLRD1","ITGA1","LILRB1","ITGAX","KLRC1","KLRC2","EPAS1","KIR2DL4","IGFBP2","CD160","GZMH","KLRF1","FGFBP2","TBX21","CD8A","CD8B","CRTAM","CCR5","NCR3","RORC","IL7R","TCF7","CD4","CCR7","SELL","LEF1","FOXP3","CTLA4","IL2RA","CXCR6","ZNF683","ITGAE","XCL1","SLC4A10","DPP4","GZMK","IGKC", "MZB1", "DERL3", "CD79A", "CD79B", "MS4A1", "BANK1")
+pops_to_plot <- c(EndoAtlas@meta.data %>% filter(AnnotationMain == "lymphocyte") %>% pull(AnnotationRefined) %>% unique())
+
+# reorder clusters
+pops_seurat <- subset(EndoAtlas, idents = pops_to_plot)
+pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
+                           levels=c("B cell", "plasma", "CD8 T$_{RM}$","CD4 T$_{RM}$","T$_{Reg}$", "T$_N$/T$_{CM}$" , "ILC" , "T$_{EM}$","CTL", "pNK", "NK3","NK2","NK1"))
+# DotPlot
+p <- Seurat::DotPlot(
+  object = pops_seurat,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = p, "./dotplots/Tan2022Fig3b_Lymphocytes_SCT.pdf", width = 17, height = 7)
+
+### epithelial markers (from Tan2022 Sup Fig. 7c)
+genes_to_plot <- c("TPPP3", "PIFO", "FOXJ1", "TP63", "KRT5", "SOX9", "LGR5", "MUC5B", "TFF3", "RUNX3", "SAA1", "SIX1", "PROM1", "PROM2", "ANPEP", "KIAA1324", "SPDEF", "SMAD9", "CD36", "HSD17B2", "SCGB2A2", "GDA", "FGFR2", "WNT7A", "FGF9", "PTGS1", "MSLN", "UPK3B", "CALB2", "PGR", "ESR1", "MMP7", "TIMP1", "IDO1", "PSAT1", "ENPP3", "GNG11", "CREB3L1", "IHH", "TOP2A", "MT1F", "MT1E", "MT1X", "SERPINA5", "SPP1", "PAEP", "CXCL14", "DPP4")
+pops_to_plot <- c("mesothelial", "ciliated", "mid-secretory", "lumenal 2", "lumenal 1", "lumenal", "glandular early-secretory", "glandular", "TP63+/KRT5+", "MUC5B+")
+# reorder clusters
+pops_seurat <- subset(EndoAtlas, idents = pops_to_plot)
+pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
+                            levels=pops_to_plot)
+#DotPlot
+p <- Seurat::DotPlot(
+  object = pops_seurat,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = p, "./dotplots/Tan2022Fig3b_epithelial_SCT.pdf", width = 17, height = 7)
+
+
+#myeloid markers ( from Tan2022 Fig. 4b)
+genes_to_plot <- c("FLOR2", "LYVE1", "MRC1", "CX3CR1", "ICAM2", "CLEC5A", "CCR2", "VEGFA", "FN1", "SPARC", "APOE", "SPP1")
+pops_to_plot <- c(EndoAtlas@meta.data %>% filter(AnnotationMain == "myeloid") %>% pull(AnnotationRefined) %>% unique())
+pops_to_plot <- c("M$\\Phi$5-activated","M$\\Phi$4-infiltrated","M$\\Phi$3-APOE","M$\\Phi$2-peritoneal","M$\\Phi$1-LYVE1")
+# reorder clusters
+pops_seurat <- subset(EndoAtlas, idents = pops_to_plot)
+pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
+                            levels=pops_to_plot)
+# DotPlot
+p <- Seurat::DotPlot(
+  object = pops_seurat,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = p, "./dotplots/Tan2022Fig3b_macrophages_SCT.pdf", width = 10, height = 7)
+
+
+#Prv and VSMC markers (from Tan2022 Fig. 3b)
+genes_to_plot <- c("RERGL", "MCAM", "MYH11", "STEAP4","GGT5", "RGS5")
+pops_to_plot <- c("Prv-MYH11", "Prv-CCL19", "Prv-STEAP4", "VSMC")
+# reorder clusters
+pops_seurat <- subset(EndoAtlas, idents = pops_to_plot)
+pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
+                            levels=c("VSMC", "Prv-STEAP4", "Prv-CCL19","Prv-MYH11"))
+# DotPlot
+p <- Seurat::DotPlot(
+  object = pops_seurat,
+  scale = T,
+  features = genes_to_plot,
+  idents = pops_to_plot,
+) + theme(axis.text.x = element_text(angle = 90))
+# Save DotPlot
+ggsave(plot = p, "./dotplots/Tan2022Fig3b_stromal_SCT.pdf", width = 7, height = 7)
+
+```
+
+Supplementary Figure 3b and e
+CODE running
+```{r}
+epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
+
+#Menstrual Cycle Day
+SFig3b <- plot_cells(epithelial_cells_monocle3, color_cells_by = "CycleDay",
+                     label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
+                     graph_label_size=3, cell_size = 1)
+SFig3b
+ggsave(filename = paste0(dir_out, 'SFig3b.pdf'),
+       plot = SFig3b,
+       width =20, height=9)
+
+
+#Menstual Cycle Phase Wang
+SFig3e <- plot_cells(epithelial_cells_monocle3 , color_cells_by = "WangMenstrualCyclePhase",
+                     label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
+                     graph_label_size=3, cell_size = 1)
+SFig3e
+ggsave(filename = paste0(dir_out, 'SFig3e.pdf'),
+       plot = SFig3e,
+       width =20, height=9)
+
+
 ```
 
 
+Supplementary Data Figure 3c
+Look in IBU folder for object with trajectory line or A063/A066
+```{r}
+#Figure S3c epithelial cells
+FeaturePlot
+Fig3c <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCycleDay", raster = FALSE)
+Fig3c
+ggsave(filename = paste0(dir_out, 'Fig3c.pdf'),
+       plot = Fig3c,
+       width =20, height=9)
+```
 
+Supplementary Data Figure 3f
+CODE OK
+```{r}
+#Figure 2b entire atlas
+Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "Wang2020Phase", raster = FALSE)
+Fig2b_1
+ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
+       plot = Fig2b_1,
+       width =20, height=9)
+
+```
 
 Supplementary Data Figure 3 g
+CODE OK
 ```{r}
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
+#cd endometriosis_endometrium_scRNA_atlas/_Data
 #wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_epithelial.h5ad
 
 ####### Convert .h5ad files to .h5seurat files
 library(SeuratDisk)
-Convert("endo-2022_epithelial.h5ad", dest = "h5seurat", assay = "RNA", overwrite = TRUE)
+Convert(paste0(dir_data,"endo-2022_epithelial.h5ad"), dest = paste0(dir_data,"endo-2022_epithelial.h5seurat"), assay = "RNA", overwrite = TRUE)
+Tan_epithelial <- LoadH5Seurat(paste0(dir_data,"endo-2022_epithelial.h5seurat"), assays = "RNA")
 
-Tan_epithelial <- LoadH5Seurat(paste0("endo-2022_epithelial.h5seurat"), assays = "RNA")
-
-Tan_epithelial <- ScaleData(object = Tan_epithelial, features = data@assays[["RNA"]]@data@Dimnames[[1]])
+#Create scale.data slot for the RNA assay required for heatmapping
+Tan_epithelial_features <- Tan_epithelial@assays[["RNA"]]@data@Dimnames[[1]]
+Tan_epithelial <- ScaleData(object = Tan_epithelial, features = Tan_epithelial_features)
 
 #Subset cells from the endometrium (exclude cells from endometriosis lesions)
 Idents(Tan_epithelial) <- Tan_epithelial$sample_type_rename
 Tan_epithelial <- subset(Tan_epithelial, idents = c("Ctrl", "EuE"))
 
 # factor levels in better order (E10 and E11 don't have endometrium cells)
-Tan_epithelial$sample <- factor(Tan_epithelial$sample, levels = c("C01", "C02", "C03", "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09"))
+Tan_epithelial$PID <- factor(Tan_epithelial$PID, levels = c("C01", "C02", "C03", "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09"))
 
 # Generate heatmap of the endometrium cells from Tan et al. 2022 with the same epithelial menstrual marker genes as in our manuscript Figure 2d, for comparison
 feature_list_figure2 <- c("SFRP4", "LAMC2", "MMP11", "MMP7", "SPRY1", "TFPI2","STEAP4","ADAMTS8","CAPN6","SLC37A2","SCGB1D2", "MT1F", "MT1X","RIMKLB", "S100P", "DEFB1","G0S2","NNMT","GPX3", "PAEP")
 
 heatmap <- DoHeatmap(
   object = Tan_epithelial,
-  features = intersect(feature_list_figure2,names),
+  features = intersect(feature_list_figure2, Tan_epithelial_features),
   cells = NULL,
-  group.by = "sample",
+  group.by = "PID",
   assay = "RNA",
   group.bar = TRUE) + 
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
@@ -752,14 +954,14 @@ ggsave(
     height = 5)
 
 
-#As control also plot menstrual marker genes from Wang et al. 2020 (DOI: 10.1038/s41591-020-1040-z)
+#As an alternative control heatmap of menstrual marker genes from Wang et al. 2020 (DOI: 10.1038/s41591-020-1040-z)
 feature_list_Wang <- c("PLAU", "MMP7", "THBS1", "CADM1", "NPAS3", "ATP1A1", "ANK3", "ALPL", "TRAK1", "SCGB1D2", "MT1F", "MT1X", "MT1E", "MT1G", "CXCL14", "MAOA", "DPP4", "NUPR1", "GPX3", "PAEP")
 
 heatmap <- DoHeatmap(
   object = Tan_epithelial,
-  features = intersect(feature_list_Wang, names),
+  features = intersect(feature_list_Wang, Tan_epithelial_features),
   cells = NULL,
-  group.by = "sample",
+  group.by = "PID",
   assay = "RNA",
   group.bar = TRUE) + 
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
@@ -770,329 +972,208 @@ ggsave(
     width = 15,
     height = 15)
 
-#The menstrual marker gene expression distribution of each sample looks comparable to our manuscript figure 2d, confirming that the different samples in Tan et al. 2022 express menstrual marker genes from different menstrual cycle phases
-
-
+#The menstrual marker gene expression varies largely between the endometrium samples in the Tan et al. 2022 dataset, strongly indicating not homogeneous menstrual cycle phase between the endometrium samples. 
+#The expression distribution of menstrual marker genes from our manuscript figure 2d and Wang et al. 2020 look comparable.
 
 ```
 
 Supplementary Data Figure 3 h
+CODE OK
 ```{r}
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
-#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_stromal.h5ad
+#cd endometriosis_endometrium_scRNA_atlas/_Data
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_epithelial.h5ad
 
 ####### Convert .h5ad files to .h5seurat files
 library(SeuratDisk)
-Convert("endo-2022_stromal.h5ad", dest = "h5seurat", assay = "RNA", overwrite = TRUE)
-Tan_stromal <- LoadH5Seurat(paste0("endo-2022_stromal.h5seurat"), assays = "RNA")
+Convert(paste0(dir_data,"endo-2022_stromal.h5ad"), dest = paste0(dir_data,"endo-2022_stromal.h5seurat"), assay = "RNA", overwrite = TRUE)
+Tan_stromal <- LoadH5Seurat(paste0(dir_data,"endo-2022_stromal.h5seurat"), assays = "RNA")
 
-# 
-FEATURES <- data@assays[["RNA"]]@data@Dimnames[[1]]
-Tan_stromal <- ScaleData(object = Tan_stromal, features = FEATURES)
+#Create scale.data slot for the RNA assay required for heatmapping
+Tan_stromal_features <- Tan_stromal@assays[["RNA"]]@data@Dimnames[[1]]
+Tan_stromal <- ScaleData(object = Tan_stromal, features = Tan_stromal_features)
 
 #Subset cells from the endometrium (exclude cells from endometriosis lesions)
 Idents(Tan_stromal) <- Tan_stromal$sample_type_rename
 Tan_stromal <- subset(Tan_stromal, idents = c("Ctrl", "EuE"))
 
 # factor levels in better order (E10 and E11 don't have endometrium cells)
-Tan_stromal$sample <- factor(Tan_stromal$sample, levels = c("C01", "C02", "C03", "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09"))
+Tan_stromal$PID <- factor(Tan_stromal$PID, levels = c("C01", "C02", "C03", "E01", "E02", "E03", "E04", "E05", "E06", "E07", "E08", "E09"))
 
-# Generate heatmap of the endometrium cells from Tan et al. 2022 with the same stromal menstrual marker genes as in our manuscript Figure 2d, for comparison
+# Generate heatmap of the endometrium cells from Tan et al. 2022 with the same epithelial menstrual marker genes as in our manuscript Figure 2d, for comparison
 feature_list_figure2_stromal <- c("SFRP1", "H1-1", "H3C2", "WNT5A","CILP","BRINP1", "CFD","PTGDS","SLIT3","RPRM", "TIMP3", "IGFBP1","LEFTY2","LRRC15","LUM")
-
-
-#Generate heatmap
 
 heatmap <- DoHeatmap(
   object = Tan_stromal,
-  features = intersect(feature_list_figure2_stromal,FEATURES),
+  features = intersect(feature_list_figure2_stromal, Tan_stromal_features),
   cells = NULL,
-  group.by = "sample",
+  group.by = "PID",
   assay = "RNA",
   group.bar = TRUE) + 
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-    filename = paste0(dir_out, "Tan_stromal_Fig2stromalMarkers.pdf"),
+    filename = paste0(dir_out, "Tan_stromal_Fig2EpiMarkers.pdf"),
     plot = last_plot(),
     width = 12.3,
     height = 5)
 
 
-#Wang genes
+#As an alternative control heatmap of menstrual marker genes from Wang et al. 2020 (DOI: 10.1038/s41591-020-1040-z)
 feature_list_Wang_stromal <- c('STC1', 'NFATC2', 'BMP2' ,'PMAIP1' ,'MMP11' ,'SFRP1', 'WNT5A' ,'ZFYVE21' ,'CILP' ,'SLF2' ,'MATN2', 'S100A4' ,'DKK1' ,'CRYAB', 'FOXO1', 'IL15', 'FGF7', 'LMCD1')
 
 heatmap <- DoHeatmap(
   object = Tan_stromal,
-  features = intersect(feature_list_Wang_stromal, FEATURES),
+  features = intersect(feature_list_Wang_stromal, Tan_stromal_features),
   cells = NULL,
-  group.by = "sample",
+  group.by = "PID",
   assay = "RNA",
   group.bar = TRUE) + 
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-    filename = paste0(dir_out, "Tan_stromal_WangstromalMarkers.pdf"),
+    filename = paste0(dir_out, "Tan_stromal_WangEpiMarkers.pdf"),
     plot = last_plot(),
     width = 15,
     height = 15)
 
-#The menstrual marker gene expression distribution of each sample looks comparable to our manuscript figure 2d, confirming that the different samples in Tan et al. 2022 express menstrual marker genes from different menstrual cycle phases
+#The menstrual marker gene expression varies largely between the endometrium samples in the Tan et al. 2022 dataset, strongly indicating not homogeneous menstrual cycle phases between the endometrium samples. 
+#The expression distribution of menstrual marker genes from our manuscript figure 2d and Wang et al. 2020 look comparable.
+
+```
+
+Supplementary Data Figure 4a
+CODE OK
+```{r plotting of cell types per sample}
+##Barplots of cell type frequency split by the main 5 cell types
+
+#Set colour palette
+P63 = createPalette(63, c("#ff0000", "#00ff00", "#0000ff")) 
+swatch(P63)
+names(P63) <- NULL
+
+
+#Make df with number of AnnotationRefined cells in each sample
+df <- EndoAtlas_meta%>%
+  filter(!is.na(AnnotationMain)) %>%
+  group_by(sample, AnnotationMain, AnnotationRefined, EndometriosisGrade, MenstrualCyclePhase, epithelial.pseudotime, EndometriosisStatus) %>%
+  summarise(row_count = n()) %>%
+  ungroup() 
+
+#Make bar plot
+p <- ggplot(df, aes(x = sample, y = row_count, fill = AnnotationRefined)) +
+  geom_bar(stat = 'identity', position = 'fill') +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = sample(P63)) +
+  xlab('Sample ID') +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(colour = "lightgray", size = 0.5)
+  ) +
+  facet_grid(AnnotationMain ~ ., scales = "free_y")
+p
+#Save barplot
+ggsave(paste0(dir_out, "SFig4a_barplot.pdf"),
+       plot = p,
+       width = 15, height = 6)
 
 ```
 
 
+Supplementary Data Figure 4b
+CODE OK
+```{r plotting of cell types per sample}
+##########################################################################################
+##Plot differences for samples without minor exclusion criteria
 
-Supplementary Data Figure 1a and 1b
-```{r VlnPlots of nCounts and nFeatures}
-##VlnPlots for "nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT","percent.mt"
-VlnPlot(data,
-  features = c("nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT","percent.mt"),
-  group.by='EndometriosisStatus', ncol = 1, pt.size=0)
-ggsave(paste0(dir_out, "VlnPlot_GroupByEndometriosisStatus_nFeature_nCounts_RNA_SCT_percMT.pdf"),
+#Make df 
+#Introduce 0 for the ones with 0 count!
+SFig4b <- EndoAtlas_meta%>%
+  filter(Minor.exclusion.criteria.logical == "FALSE") %>%
+  group_by(sample, AnnotationRefined) %>%
+  summarise(AnnotationRefined_counts = n()) %>%
+  ungroup() %>%
+  complete(sample, AnnotationRefined, fill = list(AnnotationRefined_counts = 0)) %>%
+  filter(!is.na(AnnotationRefined)) %>%
+  group_by(sample) %>%
+  mutate(AnnotationRefined_perc = AnnotationRefined_counts / sum(AnnotationRefined_counts) * 100) %>%
+  ungroup() %>% #60 samples * 63 cell types = 3780 rows, correct
+  filter(!sample %in% c("sample81", "sample87", "sample108", "sample115", "sample119", "sample121"))  #54 samples * 63 cell types = 3402 rows, correct
+SFig4b <- left_join(SFig4b, dplyr::distinct(EndoAtlas_meta[,c("sample","EndometriosisStatus","MenstrualCyclePhase_main")]), by = "sample")
+write.csv(SFig4b, paste0(dir_out,"SFig4b_AnnotationRefined_frequency.csv"))
+
+#BoxPlots percentage, EndometriosisStatus, percentage ###for paper Extended Data Fig. S4
+ggplot(SFig4b, aes(x = MenstrualCyclePhase_main, y = AnnotationRefined_perc, fill = EndometriosisStatus)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_point(aes(colour = EndometriosisStatus),
+             colour="black",pch=21, 
+             position = position_jitterdodge(jitter.width = 0.2)) +
+  facet_wrap(~AnnotationRefined, scales = "free", ncol = 7) +
+  theme_bw() +
+  expand_limits(y = 0)
+  
+ggsave(paste0(dir_out, "SFig4b_EndometriosisStatus_perc.pdf"),
   plot = last_plot(),
-  width = 4, height = 13)
+  width = 20, height = 12)
 
-##VlnPlots grouped by sample of "nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT","percent.mt" 
-# default level sort order is alphabetical, therefore refactor before plotting
-data[["EndometriosisStatus"]] <- factor(unlist(data[["EndometriosisStatus"]])) 
-#VlnPlot
-VlnPlot(data,
-  features = c("nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT","percent.mt"),
-  group.by='sample', ncol = 1, pt.size=0)
-ggsave(paste0(dir_out, "VlnPlot_GroupBySample_nFeature_nCounts_RNA_SCT_percMT.pdf"),
-  plot = last_plot(),
-  width = 25, height = 15)
-#Plot VlnPlots with boxplots and save them
-VlnPlot(data, features = "nCount_RNA", pt.size = 0) + geom_boxplot(width=0.1,fill="white",outlier.size=0)
-VlnPlot(data, features = "nFeature_RNA", pt.size = 0) + geom_boxplot(width=0.1,fill="white",outlier.size=0)
-VlnPlot(data, features = "nCount_SCT", pt.size = 0) + geom_boxplot(width=0.1,fill="white",outlier.size=0)
-VlnPlot(data, features = "nFeature_SCT", pt.size = 0) + geom_boxplot(width=0.1,fill="white",outlier.size=0)
-VlnPlot(data, features = "percent.mt", pt.size = 0) + geom_boxplot(width=0.1,fill="white",outlier.size=0)
+## Perform t-test Prolif vs Sec for each cell type
+SFig4b_ttest_ProlifSec <- SFig4b %>%
+  dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative","secretory")) %>%
+  group_by(AnnotationRefined) %>%
+  summarise(p.value = t.test(AnnotationRefined_perc ~ MenstrualCyclePhase_main)$p.value) %>%
+  ungroup()
+SFig4b_ttest_ProlifSec$p.value_adjBH <- p.adjust(SFig4b_ttest_ProlifSec$p.value, method = "BH", n = length(SFig4b_ttest_ProlifSec$p.value))
+write.csv(SFig4b_ttest_ProlifSec, paste0(dir_out,"SFig4b_ttest_ProlifSec_adjpval.csv"))
 
-```
-
-
-PCA 
-A072 1e, 2a, S1e, S3a
-A082 S1f
-
-
-```{r different counts and means/medians}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_metadata.rds")
-
-#Percentage of main 5
-table <- as.data.frame(table(data$AnnotationMain))
-table$Percentage <- round((table$Freq / sum(table$Freq)) * 100, 1)
-
-#Number of cells for CTL and Endo
-table(data$EndometriosisStatus)
-
-#Number of patients for CTL and Endo
-data %>% select(sample,EndometriosisStatus) %>%
-  distinct() %>%
-  group_by(EndometriosisStatus) %>%
-  summarize(number_of_rows = n())
-
-#mean number of cells per sample
-mean(table(data$sample))
-
-#median count/feature
-median_summary <- data %>%
-  select(nCount_RNA, nCount_SCT, nFeature_RNA, nFeature_SCT) %>%
-  summarize(
-    median_nCount_RNA = median(nCount_RNA),
-    median_nCount_SCT = median(nCount_SCT),
-    median_nFeature_RNA = median(nFeature_RNA),
-    median_nFeature_SCT = median(nFeature_SCT)
-  )
+# Perform t-test CTL vs Endo for each cell type grouped by AnnotationRefined, MenstrualCyclePhase_main
+SFig4b_ttest_EndometriosisStatus <- SFig4b %>%
+  group_by(AnnotationRefined, MenstrualCyclePhase_main) %>%
+  summarise(p.value = t.test(AnnotationRefined_perc ~ EndometriosisStatus)$p.value) %>%
+  ungroup()
+#Prv_VSMC secretory pval 0.009075467
+SFig4b_ttest_EndometriosisStatus$p.value_adjBH <- p.adjust(SFig4b_ttest_EndometriosisStatus$p.value, method = "BH", n = length(SFig4b_ttest_EndometriosisStatus$p.value))
+write.csv(SFig4b_ttest_EndometriosisStatus, paste0(dir_out,"SFig4b_ttest_EndometriosisStatus_adjpval.csv"))
+#After correction for multiple testing Prv_VSMC secretory is not significant anymore
 
 ```
 
-Supplementary Data Figure 2
-```{refined cluster markers}
-#Load data
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-#data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-meta <- data@meta.data
-
-#Set SCT as default and remove RNA to save space
-DefaultAssay(data) <- "SCT"
-data@assays$RNA <- NULL
-gc()
-
-#Remove data without annotation (no NAs!)
-Idents(data) <- data$Symphony_Refined
-data <- subset(data, subset = Symphony_Refined %in% levels(as.factor(data$Symphony_Refined)))
-gc()
-
-#setdiff(pops_to_plot,unique(data$Symphony_Refined))
-######################################################
-#Tan2022 Sup Fig. 7c, epithelial
-genes_to_plot <- c("TPPP3", "PIFO", "FOXJ1", "TP63", "KRT5", "SOX9", "LGR5", "MUC5B", "TFF3", "RUNX3", "SAA1", "SIX1", "PROM1", "PROM2", "ANPEP", "KIAA1324", "SPDEF", "SMAD9", "CD36", "HSD17B2", "SCGB2A2", "GDA", "FGFR2", "WNT7A", "FGF9", "PTGS1", "MSLN", "UPK3B", "CALB2", "PGR", "ESR1", "MMP7", "TIMP1", "IDO1", "PSAT1", "ENPP3", "GNG11", "CREB3L1", "IHH", "TOP2A", "MT1F", "MT1E", "MT1X", "SERPINA5", "SPP1", "PAEP", "CXCL14", "DPP4")
-pops_to_plot <- c("mesothelial", "ciliated", "mid-secretory", "lumenal 2", "lumenal 1", "lumenal", "glandular early-secretory", "glandular", "TP63+/KRT5+", "MUC5B+")
-
-# reorder clusters
-pops_seurat <- subset(data, idents = pops_to_plot)
-pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
-                            levels=pops_to_plot)
-p <- Seurat::DotPlot(
-  object = pops_seurat,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = p, "./dotplots/Tan2022Fig3b_epithelial_SCT.pdf", width = 17, height = 7)
-######################################################
-#DotPlot of features from Tan2022 Fig. 4b, Lymphocytes
-genes_to_plot <- c("FCGR3A","KLRD1","ITGA1","LILRB1","ITGAX","KLRC1","KLRC2","EPAS1","KIR2DL4","IGFBP2","CD160","GZMH","KLRF1","FGFBP2","TBX21","CD8A","CD8B","CRTAM","CCR5","NCR3","RORC","IL7R","TCF7","CD4","CCR7","SELL","LEF1","FOXP3","CTLA4","IL2RA","CXCR6","ZNF683","ITGAE","XCL1","SLC4A10","DPP4","GZMK","IGKC", "MZB1", "DERL3", "CD79A", "CD79B", "MS4A1", "BANK1")
-pops_to_plot <- c(meta %>% filter(AnnotationMain == "lymphocyte") %>% pull(Symphony_Refined) %>% unique())
-
-# reorder clusters
-pops_seurat <- subset(data, idents = pops_to_plot)
-pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
-                           levels=c("B cell", "plasma", "CD8 T$_{RM}$","CD4 T$_{RM}$","T$_{Reg}$", "T$_N$/T$_{CM}$" , "ILC" , "T$_{EM}$","CTL", "pNK", "NK3","NK2","NK1"))
-
-p <- Seurat::DotPlot(
-  object = pops_seurat,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = p, "./dotplots/Tan2022Fig3b_Lymphocytes_SCT.pdf", width = 17, height = 7)
-######################################################
-#Tan2022 Fig. 3b, stromal
-genes_to_plot <- c("RERGL", "MCAM", "MYH11", "STEAP4","GGT5", "RGS5")
-pops_to_plot <- c("Prv-MYH11", "Prv-CCL19", "Prv-STEAP4", "VSMC")
-# reorder clusters
-pops_seurat <- subset(data, idents = pops_to_plot)
-pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
-                            levels=c("VSMC", "Prv-STEAP4", "Prv-CCL19","Prv-MYH11"))
+Supplementary Data Figure 5a
+```{r}
+DEGs
 
 
-p <- Seurat::DotPlot(
-  object = pops_seurat,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = p, "./dotplots/Tan2022Fig3b_stromal_SCT.pdf", width = 7, height = 7)
-######################################################
-#Tan2022 Fig. 4b, macrophages
-genes_to_plot <- c("FLOR2", "LYVE1", "MRC1", "CX3CR1", "ICAM2", "CLEC5A", "CCR2", "VEGFA", "FN1", "SPARC", "APOE", "SPP1")
-pops_to_plot <- c(meta %>% filter(AnnotationMain == "myeloid") %>% pull(Symphony_Refined) %>% unique())
-pops_to_plot <- c("M$\\Phi$5-activated","M$\\Phi$4-infiltrated","M$\\Phi$3-APOE","M$\\Phi$2-peritoneal","M$\\Phi$1-LYVE1")
 
-# reorder clusters
-pops_seurat <- subset(data, idents = pops_to_plot)
-pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
-                            levels=pops_to_plot)
-p <- Seurat::DotPlot(
-  object = pops_seurat,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = p, "./dotplots/Tan2022Fig3b_macrophages_SCT.pdf", width = 10, height = 7)
-######################################################
-#Tan2022 Fig. 5a, DCs
-genes_to_plot <- c("CD1C", "CLEC9A", "LAMP3")
-pops_to_plot <- c("mDC", "cDC1", "DC3", "cDC2", "pre-cDC2")
-# reorder clusters
-pops_seurat <- subset(data, idents = pops_to_plot)
-pops_seurat@active.ident <- factor(pops_seurat@active.ident, 
-                            levels=pops_to_plot)
-p <- Seurat::DotPlot(
-  object = pops_seurat,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = p, "./dotplots/Tan2022Fig3b_DCs_SCT.pdf", width = 5, height = 7)
 
-rm(data)
-gc()
+
+```
+
+Supplementary Data Figure 5b-d
+```{r}
+
+#Figure 3c and Supplementary Figure 5b
+gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
+gk1 
+ggsave(plot = gk1,
+       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
+
+
+#Load CellChat data
+cellchat <- readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
+
+#Supplementary Data Figure 5d TNF
+netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("TNF"), remove.isolate = FALSE) 
+ggsave(plot = last_plot(),
+       filename = paste0(dir_out, 'output_comparison_Refined/netVisual_bubble_TNF.pdf'), width =25,height=5)
+
 
 ```
 
 
 
-
-```{major cluster markers}
-#Load data
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-#data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-
-#Set SCT as default and remove RNA to save space
-DefaultAssay(data) <- "SCT"
-data@assays$RNA <- NULL
-gc()
-
-#Remove data without annotation
-Idents(data) <- data$AnnotationMain
-data <- subset(data, subset = AnnotationMain %in% levels(as.factor(data$AnnotationMain)))
-
-GENES <- c("EPCAM","CDH1","PDGFRA","VWF","PECAM1","PTPRC","CD68","CD14","CD2")
-p <- VlnPlot(data, features = GENES, group.by = "AnnotationMain",raster=FALSE, pt.size = 0, assay = "SCT", stack=T, flip=T)
-ggsave(plot = p, "./VlnPlotMain5_SCT_notds.pdf", width = 6, height = 4.5)
-
-
-GENES <- c("PDGFRA","DCN","COL1A1","COL6A1","CRISPLD2","COL6A3","LUM","COL5A1") #stomal genes, only "PDGFRA" and "CRISPLD2" are cleanly expressed in stromal only, the others are a bit mixed
-p <- VlnPlot(data, features = GENES, group.by = "AnnotationMain",raster=FALSE, pt.size = 0, assay = "RNA", stack=T, flip=T)
-ggsave(plot = p, "./VlnPlotMain5_stromalMG_RNA_notds.pdf", width = 6, height = 4.5)
-
-p <- VlnPlot(data, features = GENES, group.by = "AnnotationMain",raster=FALSE, pt.size = 0, assay = "SCT", stack=T, flip=T)
-ggsave(plot = p, "./VlnPlotMain5_stromalMG_SCT_notds.pdf", width = 6, height = 4.5)
-
-
-GENES <- c("EPCAM","CDH1","PDGFRA","COL1A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2")
-p <- VlnPlot(data, features = GENES, group.by = "AnnotationMain",raster=FALSE, pt.size = 0, assay = "RNA", stack=T, flip=T)
-ggsave(plot = p, "./VlnPlotMain5_RNA_notds.pdf", width = 6, height = 4.5)
-
-
-table(data$AnnotationMain)
-
-#Make DotPlots
-DefaultAssay(data) <- "SCT"
-
-GENES 
-
-######################################################
-#Tan2022 main markers
-genes_to_plot <- c("EPCAM","CDH1","PDGFRA","COL1A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2")
-pops_to_plot <- c("stromal","epithelial","myeloid","lymphocyte","endothelial")
-
-Seurat::DotPlot(
-  object = data,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = last_plot(), "./dotplots/main5_main5markers_SCT.pdf", width = 10, height = 5)
-
-#stomal markers
-genes_to_plot <- c("PDGFRA","DCN","COL1A1","COL6A1","CRISPLD2","COL6A3","LUM","COL5A1") #stomal genes, only "PDGFRA" and "CRISPLD2" are cleanly expressed in stromal only, the others are a bit mixed
-Seurat::DotPlot(
-  object = data,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = last_plot(), "./dotplots/main5_stromalmarkers_SCT.pdf", width = 10, height = 5)
-
-#all markers + stomal
-genes_to_plot <- c("EPCAM","CDH1","PDGFRA","COL5A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2","DCN","COL6A1","CRISPLD2","COL6A3","LUM","COL1A1") #stomal genes, only "PDGFRA" and "CRISPLD2" are cleanly expressed in stromal only, the others are a bit mixed
-Seurat::DotPlot(
-  object = data,
-  scale = T,
-  features = genes_to_plot,
-  idents = pops_to_plot,
-) + theme(axis.text.x = element_text(angle = 90))
-ggsave(plot = last_plot(), "./dotplots/main5_allmarkers_SCT.pdf", width = 17, height = 5)
-
-```
-
-
+##################################################################################################################
+Scailyte part
+#Supplementary Data Figure 6a, b
 ```{r barplot distribution of cv splits, all cells, prolif}
 meta <- read.csv("/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")
 
@@ -1100,10 +1181,11 @@ library(reshape2)
 library(ggplot2)
 library(forcats)
 
+#Supplementary Data Figure 6a
 # reshape df
-melted_meta <- melt(meta, id.vars = c("lane", "endo_EndometriosisGrade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+melted_meta <- melt(meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
 ## create the bar plot for endo_EndometriosisGrade
-ggplot(melted_meta, aes(x = variable, fill = endo_EndometriosisGrade)) +
+ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
   labs(title = "Bar Plot of Samples by Endo EndometriosisGrade",
@@ -1114,7 +1196,7 @@ ggplot(melted_meta, aes(x = variable, fill = endo_EndometriosisGrade)) +
   coord_flip()
 ggsave(paste0(dir_out,"Bar Plot of Samples by Endo EndometriosisGrade_allcells.pdf"), plot = last_plot(), height = 6.3, width = 7.2)
 
-## create the bar plot for lane
+#Supplementary Data Figure 6b
 ggplot(melted_meta, aes(x = variable, fill = lane)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
@@ -1126,7 +1208,7 @@ ggplot(melted_meta, aes(x = variable, fill = lane)) +
   coord_flip()
 ggsave(paste0(dir_out,"Bar Plot of Samples by lane_allcells.pdf"), plot = last_plot(), height = 6.3, width = 7.2)
 
-
+#Supplementary Data Figure 6e
 ##Upsetplot of eval samples
 df <- meta %>%
   rownames_to_column(var = "name") %>%
@@ -1144,7 +1226,7 @@ dev.off()
 
 
 
-################
+################?/???????
 #heatmap, not working yet
 
 # Extracting the necessary columns from the 'meta' dataframe
@@ -1173,256 +1255,6 @@ heatmap <- Heatmap(
 )
 
 draw(heatmap)
-dev.off()
-```
-
-```{r barplot distribution of cv splits, cf, prolif}
-meta <- read.csv("/home/common/data/output/projects/ENDO/E041/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")
-
-library(reshape2)
-library(ggplot2)
-library(forcats)
-
-# reshape df
-melted_meta <- melt(meta, id.vars = c("lane", "endo_EndometriosisGrade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
-# create the bar plot for endo_EndometriosisGrade
-ggplot(melted_meta, aes(x = variable, fill = endo_EndometriosisGrade)) +
-  geom_bar(position = "stack", width = 0.7) +
-  facet_wrap(~ fct_rev(value), ncol = 2) +
-  labs(title = "Bar Plot of Samples by Endo EndometriosisGrade",
-       x = "Fold",
-       y = "Number of Samples") +
-  scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
-  theme_minimal() +
-  coord_flip()
-ggsave(paste0(dir_out,"Bar Plot of Samples by Endo EndometriosisGrade_cf.pdf"), plot = last_plot(), height = 6.3, width = 7.2)
-
-# create the bar plot for lane
-ggplot(melted_meta, aes(x = variable, fill = lane)) +
-  geom_bar(position = "stack", width = 0.7) +
-  facet_wrap(~ fct_rev(value), ncol = 2) +
-  labs(title = "Bar Plot of Samples by lane",
-       x = "Fold",
-       y = "Number of Samples") +
-  #scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
-  theme_minimal() +
-  coord_flip()
-ggsave(paste0(dir_out,"Bar Plot of Samples by lane_cf.pdf"), plot = last_plot(), height = 6.3, width = 7.2)
-
-##Upsetplot of eval samples
-df <- meta %>%
-  rownames_to_column(var = "name") %>%
-  select(-name) %>% 
-  select(fold1, fold2, fold3, fold4, fold5) %>%
-  mutate_all(~ ifelse(. == 'eval', TRUE, FALSE)) %>%
-  filter(rowSums(. == TRUE) > 0)
-pdf(file.path(dir_out, "upset_CellCnnsig_cf_evalsamples.pdf"))
-upset(df,
-  colnames(df)) +
-  ggtitle("all cells")
-dev.off()
-
-
-################
-#heatmap, not working yet
-
-# Extracting the necessary columns from the 'meta' dataframe
-data_matrix <- meta[, c("fold1", "fold2", "fold3", "fold4", "fold5")]
-data_matrix_numeric <- apply(data_matrix, 2, function(x) as.numeric(x == "eval"))
-
-# Adding annotation columns
-annotation_data <- meta[, c("EndometriosisStatus", "lane", "batch", "endo_EndometriosisGrade")]
-
-library(ComplexHeatmap)
-library(circlize)
-
-# Define a custom color palette
-my_color_palette <- colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-png(file=paste0(dir_out,'heatmap.pdf'))
-# Create the heatmap using ComplexHeatmap
-heatmap <- Heatmap(
-  data_matrix_numeric,
-  col = my_color_palette,
-  row_dend_reorder = TRUE,  # Adjust this based on your preference
-  column_title = "Folds",
-  name = "Fold Value",
-  show_row_names = FALSE,
-  show_column_names = TRUE,
-  cluster_columns = FALSE
-)
-
-draw(heatmap)
-dev.off()
-```
-
-```{r DimPlot with cycling fibroblasts}
-data <- readRDS("/home/common/data/output/projects/ENDO/E031/A004/proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated.RDS")
-DimPlot(data, raster = FALSE)
-meta <- data@meta.data
-write.csv(meta, paste0(dir_out,"E031A004_proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated_meta.csv"))
-
-
-# make dotplot
-features <- c("NFKBIA", "SLPI", "CXCL2","CXCL3")
-Idents(data) <- data$Annotation
-
-epithelial <- subset(data, idents = "Unciliated")
-
-DotPlot(
-  epithelial,
-  assay = "SCT",
-  features,
-  cols = c("lightgrey", "blue"),
-  col.min = -2.5,
-  col.max = 2.5,
-  dot.min = 0,
-  dot.scale = 6,
-  idents = NULL,
-  group.by = "EndometriosisStatus",
-  split.by = NULL,
-  cluster.idents = FALSE,
-  scale = TRUE,
-  scale.by = "radius",
-  scale.min = NA,
-  scale.max = NA
-)
-
-
-
-```
-
-```{r Expression distribution of all genes and pca signature}
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-#data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
-
-#CellCnn gene signature
-#Summary table for cyc fibro corrgpca: 
-CellCnnsig_fibro_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E041/A010/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv") 
-#Summary table for  cyc fibro pca :  
-CellCnnsig_fibro_pca <- read.csv("/home/common/data/output/projects/ENDO/E041/A012/sigs/weighted_score_sig_pca_1pc.csv") 
-#Summary table for  all cells corrgpca: 
-CellCnnsig_all_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E042/A011/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv") 
-#Summary table for  all cells pca: 
-CellCnnsig_all_pca <- read.csv("/home/common/data/output/projects/ENDO/E042/A012/sigs/weighted_score_sig_pca_1pc.csv") 
-CellCnnsig <- unique(c(CellCnnsig_all_corrgpca$gene, CellCnnsig_all_pca$gene))
-ScaiNETsamples <- read.csv("/home/common/data/output/projects/ENDO/E041/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")
-
-#Make UpSet plot
-# Create table with the gene sets
-gene_sets <- list(
-    PCA = CellCnnsig_all_pca$gene,
-    CorrgPCA = CellCnnsig_all_corrgpca$gene)
-all_genes <- unique(unlist(gene_sets))
-df <- as.data.frame(lapply(gene_sets, function(gene_set) {
-  setNames(as.logical(all_genes %in% gene_set), all_genes)
-}))
-# Make upset plot
-pdf(file.path(dir_out, "upset_CellCnnsig_all_pca_corrgpcs.pdf"))
-upset(df,
-  colnames(df),
-  set_sizes=(
-        upset_set_size(position='right'))) +
-  ggtitle("all cells")
-dev.off()
-
-
-#CTL and Endo samples used for the DEG
-#Filter for samples with >50 cells/sample
-data_metadata <- data@meta.data
-df_sample_cells <- data@meta.data %>% 
-  dplyr::group_by(sample, EndometriosisStatus) %>% 
-  dplyr::summarize(cells = n()) %>% 
-  dplyr::filter(cells >= 50) %>% 
-  dplyr::filter(sample %in% ScaiNETsamples$names) 
-ENDO <- df_sample_cells %>% filter(EndometriosisStatus == "Endo") %>%
-  select(sample) %>%
-  pull(sample)
-CTL <- df_sample_cells %>% filter(EndometriosisStatus == "CTL") %>%
-  select(sample) %>%
-  pull(sample)
-#Retrieve number of Endo/CTL samples with RNA expression
-exprmatrix_data <- AggregateExpression(
-  data,
-  assays = "RNA",
-  features = NULL,
-  return.seurat = FALSE,
-  group.by = c("sample"),
-  slot = "counts",
-  verbose = TRUE)[["RNA"]]
-exprmatrix_data <- as.data.frame(exprmatrix_data)
-exprmatrix_data$gene <- row.names(exprmatrix_data)
-exprmatrix_data <- exprmatrix_data %>%
-  mutate(Endo_expressed_n = rowSums(select(., all_of(ENDO)) > 0)) %>%
-  mutate(CTL_expressed_n = rowSums(select(., all_of(CTL)) > 0)) %>%
-  mutate(samples_expressed_n = Endo_expressed_n + CTL_expressed_n) %>%
-  mutate(ENDOorCTL_max_expressed_n = pmax(Endo_expressed_n, CTL_expressed_n))
-table(exprmatrix_data$ENDOorCTL_max_expressed_n)
-
-exprmatrix_CellCnnsig <- exprmatrix_data %>%
-  filter(row.names(exprmatrix_data) %in% CellCnnsig$gene)
-table(exprmatrix_CellCnnsig$ENDOorCTL_max_expressed_n)
-
-exprmatrix_data <- exprmatrix_data %>%
-  mutate(CellCnnsig = row.names(exprmatrix_data) %in% CellCnnsig$gene)
-
-
-# Create a histogram
-ggplot(exprmatrix_data, aes(x = samples_expressed_n, y = after_stat(count))) +
-  geom_histogram(binwidth = 1, fill = "blue", color = "black") +
-  facet_wrap(~ CellCnnsig, ncol = 2, scales = "free_y") +
-  labs(x = "number of samples with gene expression", y = "number of genes expressed") +
-  theme_minimal() +
-  geom_text(
-    aes(label = after_stat(count)),
-    stat = "count",
-    vjust = -0.5,
-    size = 2,
-    position = position_stack()
-  )
-
-################################ in work
-# Assuming your data is stored in a data frame named 'CellCnnsig_all_pca'
-library(ggplot2)
-
-color_scale <- scale_fill_gradient(low = "red", high = "green")
-
-heatmap_plot <- ggplot(CellCnnsig_all_pca, aes(x = X, y = gene, fill = rank)) +
-  color_scale +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-heatmap_plot <- heatmap_plot +
-  geom_text(aes(label = gene), vjust = 1, hjust = 1, size = 3)
-
-# Show the plot
-print(heatmap_plot)
-#####################################
-```
-
-```{r Expression distribution of all genes and pca signature for cf}
-#CellCnn gene signature
-#Summary table for cyc fibro corrgpca: 
-CellCnnsig_fibro_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E041/A010/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv") 
-#Summary table for  cyc fibro pca :  
-CellCnnsig_fibro_pca <- read.csv("/home/common/data/output/projects/ENDO/E041/A012/sigs/weighted_score_sig_pca_1pc.csv") 
-CellCnnsig <- unique(c(CellCnnsig_fibro_corrgpca$gene, CellCnnsig_fibro_pca$gene))
-
-#Make UpSet plot
-# Create table with the gene sets
-gene_sets <- list(
-    PCA = CellCnnsig_fibro_pca$gene,
-    CorrgPCA = CellCnnsig_fibro_corrgpca$gene)
-all_genes <- unique(unlist(gene_sets))
-df <- as.data.frame(lapply(gene_sets, function(gene_set) {
-  setNames(as.logical(all_genes %in% gene_set), all_genes)
-}))
-# Make upset plot
-pdf(file.path(dir_out, "upset_CellCnnsig_fibro_pca_corrgpcs.pdf"))
-upset(df,
-  colnames(df),
-  set_sizes=(
-        upset_set_size(position='right'))) +
-  ggtitle("fibro")
 dev.off()
 ```
 
@@ -1442,64 +1274,29 @@ meta <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_m
 meta$Symphony_Refined[meta$Symphony_Refined == "M$\\Phi$1-LYVE1"] <- "M-Phi-1-LYVE1"
 meta$Symphony_Refined[meta$Symphony_Refined == "glandular early-secretory"] <- "glandular-early-secretory"
 meta <- meta %>% 
-  select(AnnotationMain,Symphony_Refined,Symphony_Refined_A029_United) %>%
+  select(Symphony_Global_main5,Symphony_Refined,Symphony_Refined_A029_United) %>%
   distinct()
 RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  mutate(AnnotationMain = cluster_id)
-RNAlistRDS005_df$AnnotationMain <- case_when(
-  RNAlistRDS005_df$AnnotationMain %in% meta$Symphony_Refined ~ meta$AnnotationMain[match(RNAlistRDS005_df$AnnotationMain, meta$Symphony_Refined)],
-  RNAlistRDS005_df$AnnotationMain %in% meta$Symphony_Refined_A029_United ~ meta$AnnotationMain[match(RNAlistRDS005_df$AnnotationMain, meta$Symphony_Refined_A029_United)],
-  TRUE ~ RNAlistRDS005_df$AnnotationMain)
-RNAlistRDS005_df$AnnotationMain[RNAlistRDS005_df$AnnotationMain == "myeloid" |
-                                      RNAlistRDS005_df$AnnotationMain == "lymphocyte"] <- "immune"
-
-###Plot DEGs
-#vulcano plot without gene labels
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc), color = stage)) +
-  geom_point() +
-  theme_minimal() +
-  #ylim(-2, 17) +
-  xlim(-1, 1.2)
-ggsave(paste0(dir_out,"VulcanoPlot_DEGs_stage.pdf"), 
-       plot = last_plot(), 
-       height = 6.3, width = 5)
-
-#vulcano plot with gene labels
-GenesToLabel <- RNAlistRDS005_df %>% 
-               #distinct(gene, logFC,AveExpr,p_adj.loc, .keep_all = TRUE) %>% 
-                dplyr::filter(abs(logFC) >= 0.5)
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc), color = stage)) +
-  geom_point() +
-  theme_minimal() +
-  #ylim(-2, 17) +
-  xlim(-1, 1.2) +
-  geom_text_repel(data = GenesToLabel,
-                  aes(label = gene),
-                  size = 2,
-                  max.overlaps = 50,
-                  box.padding = 0.35,
-                  point.padding = 0.5,
-                  segment.color = 'grey50')
-#Barplot unique genes per main cell type
-RNAlistRDS005_df %>% 
-  select(AnnotationMain,gene,stage,cluster_id) %>%
-  ggplot(aes(x = stage, fill = cluster_id)) +
-  geom_bar() +
-  facet_wrap(~ AnnotationMain, ncol = 4) +
-  theme(axis.text.x = element_text(angle=45, vjust=.2, hjust=0.3))
+  mutate(Symphony_Global_main5 = cluster_id)
+RNAlistRDS005_df$Symphony_Global_main5 <- case_when(
+  RNAlistRDS005_df$Symphony_Global_main5 %in% meta$Symphony_Refined ~ meta$Symphony_Global_main5[match(RNAlistRDS005_df$Symphony_Global_main5, meta$Symphony_Refined)],
+  RNAlistRDS005_df$Symphony_Global_main5 %in% meta$Symphony_Refined_A029_United ~ meta$Symphony_Global_main5[match(RNAlistRDS005_df$Symphony_Global_main5, meta$Symphony_Refined_A029_United)],
+  TRUE ~ RNAlistRDS005_df$Symphony_Global_main5)
+RNAlistRDS005_df$Symphony_Global_main5[RNAlistRDS005_df$Symphony_Global_main5 == "myeloid" |
+                                      RNAlistRDS005_df$Symphony_Global_main5 == "lymphocyte"] <- "immune"
 
 #Barplot unique genes per main cell type
 RNAlistRDS005_df %>% 
-  select(AnnotationMain, gene, stage, cluster_id) %>%
-  ggplot(aes(x = stage, fill = factor(AnnotationMain, levels = c("immune", "endothelial", "epithelial", "stromal")))) +
+  select(Symphony_Global_main5, gene, stage, cluster_id) %>%
+  ggplot(aes(x = stage, fill = factor(Symphony_Global_main5, levels = c("immune", "endothelial", "epithelial", "stromal")))) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.3))
 
-#Barplot unique genes per main cell type
+#Barplot unique genes per main cell type, filter for duplicates. Doublecheck numbers
 RNAlistRDS005_df %>% 
-  select(AnnotationMain, gene, stage) %>%
+  select(Symphony_Global_main5, gene, stage) %>%
   distinct() %>%
-  ggplot(aes(x = stage, fill = factor(AnnotationMain, levels = c("immune", "endothelial", "epithelial", "stromal")))) +
+  ggplot(aes(x = stage, fill = factor(Symphony_Global_main5, levels = c("immune", "endothelial", "epithelial", "stromal")))) +
   geom_bar() +
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.3))
 ggsave(paste0(dir_out,"BarPlot_DEGs_main4.pdf"), 
@@ -1507,9 +1304,9 @@ ggsave(paste0(dir_out,"BarPlot_DEGs_main4.pdf"),
        height = 4, width = 10)
 
 RNAlistRDS005_df %>% 
-      select(AnnotationMain, gene, stage) %>%
+      select(Symphony_Global_main5, gene, stage) %>%
       distinct() %>%
-      count(stage, AnnotationMain)
+      count(stage, Symphony_Global_main5)
 
 RNAlistRDS005_df %>% 
       filter(logFC >= 0.5) %>%
@@ -1522,576 +1319,14 @@ RNAlistRDS005_df %>%
       count(stage)
 
 table <- RNAlistRDS005_df %>% 
-      select(AnnotationMain, gene, stage) %>%
+      select(Symphony_Global_main5, gene, stage) %>%
       distinct() %>%
-      count(AnnotationMain, stage)
-
-
-
+      count(Symphony_Global_main5, stage)
 
 ```
 
-
- 
- 
-```{r DEGs vs CellCNN gene signature}
-##Load dataframes
-#CellCnn gene signature
-#Summary table for cyc fibro corrgpca: 
-CellCnnsig_fibro_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E041/A010/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv") 
-#Summary table for  cyc fibro pca :  
-CellCnnsig_fibro_pca <- read.csv("/home/common/data/output/projects/ENDO/E041/A012/sigs/weighted_score_sig_pca_1pc.csv") 
-#Summary table for  all cells corrgpca: 
-CellCnnsig_all_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E042/A011/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv") 
-CellCnnsig_all_corrgpca$origin <- "A011corrgpca"
-#Summary table for  all cells pca: 
-CellCnnsig_all_pca <- read.csv("/home/common/data/output/projects/ENDO/E042/A012/sigs/weighted_score_sig_pca_1pc.csv") 
-CellCnnsig_all_pca$origin <- "A012pca"
-
-CellCnnsig <- rbind(CellCnnsig_all_corrgpca, CellCnnsig_all_pca)
-
-#RNA assay DEGs from proliferative samples
-RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv")
-
-##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
-#Haemoglobin genes
-hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes
-CellCnnsig[CellCnnsig$gene %in% hb.genes, ]#no hb genes
-RNAlistRDS005_df[RNAlistRDS005_df$gene %in% hb.genes, ]#no hb genes
-#mitochondrial genes
-grep("^MT-", CellCnnsig$gene, value=TRUE)#no mt genes
-grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#no mt genes
-#ribosomal genes
-rb.genes_CellCnnsig <- grep(pattern = "^RP[SL]", CellCnnsig$gene, value=TRUE)#3 rb genes
-CellCnnsig <- CellCnnsig[!(CellCnnsig$gene %in% rb.genes_CellCnnsig), ]
-rb.genes_DEGs <- unique(grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE))#77 rb genes
-RNAlistRDS005_df <- RNAlistRDS005_df[!(RNAlistRDS005_df$gene %in% rb.genes_DEGs), ]
-
-##Combine the two dataframes
-RNAlistRDS005_df$CellCnnsig <- factor(RNAlistRDS005_df$gene %in% CellCnnsig$gene,
-                                        levels = c(FALSE, TRUE),
-                                        labels = c("Non-overlapping", "overlapping"))
-
-##Make plots
-# Create a scatter plot logFC vs AveExpr
-ggplot(RNAlistRDS005_df, aes(x = AveExpr, y = logFC)) +
-  geom_point(data = RNAlistRDS005_df, aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = RNAlistRDS005_df %>% dplyr::filter(CellCnnsig == "overlapping"),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "Scatter Plot",
-       color = "Overlap with CellCnnsig") +
-  theme_minimal()
-ggplot(RNAlistRDS005_df, aes(x = AveExpr, y = logFC, color = cluster_id)) +
-  geom_point(size = 1) +
-  labs(title = "Scatter Plot") +
-  theme_minimal()
-
-# Create a scatter plot logFC vs AveExpr
-ggplot(RNAlistRDS005_df, aes(x = p_adj.loc, y = logFC)) +
-  geom_point(data = RNAlistRDS005_df, aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = RNAlistRDS005_df %>% dplyr::filter(CellCnnsig == "overlapping"),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "Scatter Plot",
-       color = "Overlap with CellCnnsig") +
-  theme_minimal()
-ggplot(RNAlistRDS005_df, aes(x = p_adj.loc, y = logFC, color = cluster_id)) +
-  geom_point(size = 1) +
-  labs(title = "Scatter Plot") +
-  theme_minimal()
-
-# Create a scatter plot
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = p_adj.loc)) +
-  geom_point(data = RNAlistRDS005_df, aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = RNAlistRDS005_df %>% dplyr::filter(CellCnnsig == "overlapping"),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "Scatter Plot",
-       color = "Overlap with CellCnnsig E042A011A012") +
-  theme_minimal()
-
-# Create vulcano plot
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = RNAlistRDS005_df, aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = RNAlistRDS005_df %>% dplyr::filter(CellCnnsig == "overlapping"),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "Scatter Plot",
-       color = "Overlap with CellCnnsig E042A011A012") +
-  theme_minimal()
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc), color = cluster_id)) +
-  geom_point(size = 1.2) 
-ggsave(filename = paste0(dir_out, 'vulcano_clusterid_10_5.pdf'), width =6,height=3)
-
-
-
-overlap <- RNAlistRDS005_df[(RNAlistRDS005_df$gene %in% CellCnnsig$gene),]
-length(unique(overlap$gene))
-#Plot 
-par(mfrow = c(2, 1))
-plot(density(overlap$AveExpr))
-plot(density(RNAlistRDS005_df$AveExpr))
-
-#Histogram
-# Create the barplot
-summary_data <- RNAlistRDS005_df %>%
-  group_by(cluster_id, stage, CellCnnsig) %>%
-  dplyr::summarize(Freq = n())
-# Create the barplot with color by CellCnnsig
-
-# Create the barplot with a log2 scale on the y-axis
-ggplot(summary_data, aes(x = cluster_id, y = Freq, fill = CellCnnsig)) +
-  geom_bar(position = "stack", stat = "identity") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4) +
-  scale_y_break(c(100, 150), scales = 0.3)+ 
-  scale_y_break(c(350, 2500), scales = 0.3)
-
-ggplot(RNAlistRDS005_df, aes(x = cluster_id, y = p_adj.loc, color = CellCnnsig)) +
-  geom_violin() +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4)
-ggplot(RNAlistRDS005_df, aes(x = cluster_id, y = logFC, color = CellCnnsig)) +
-  geom_violin() +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4)
-ggplot(RNAlistRDS005_df, aes(x = cluster_id, y = AveExpr, color = CellCnnsig)) +
-  geom_boxplot(outlier.colour="black", outlier.shape=16,
-             outlier.size=0, notch=FALSE) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4)
-
-ggplot(summary_data, aes(x = cluster_id, y = Freq, fill = CellCnnsig)) +
-  geom_bar(position = "fill", stat = "identity") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4)
-
-#Get number of overlapping DEGs per cluster
-head(RNAlistRDS005_df)
-overlapping <- RNAlistRDS005_df[RNAlistRDS005_df$gene %in% CellCnnsig$gene,]
-table(overlapping$cluster_id)
-table(RNAlistRDS005_df$cluster_id)
-
-#Density plot for logFC
-p1 <- ggplot(RNAlistRDS005_df, aes(x = logFC, fill = CellCnnsig)) +
-  geom_density(alpha = 0.5) +  
-  theme_minimal() + 
-  scale_fill_manual(values = c("Non-overlapping" = "blue", "overlapping" = "orange"),drop = FALSE) 
-p1
-#Density plot for AveExpr
-p2 <- ggplot(RNAlistRDS005_df, aes(x = log2(AveExpr - 17), fill = CellCnnsig)) +
-  geom_density(alpha = 0.5) + 
-  theme_minimal() + 
-  scale_fill_manual(values = c("Non-overlapping" = "blue", "overlapping" = "orange"),drop = FALSE) +
-  geom_vline(xintercept = 0.5849625)
-p2
-#Density plot for p_adj.loc
-p3 <- ggplot(RNAlistRDS005_df, aes(x = p_adj.loc, fill = CellCnnsig)) +
-  geom_density(alpha = 0.5) + 
-  theme_minimal() + 
-  scale_fill_manual(values = c("Non-overlapping" = "blue", "overlapping" = "orange"),drop = FALSE) 
-plot_grid(p1,p2,p3, ncol=1)
-
-```
-
-```{r Make rank by padj.loc and logFC and evaluate in vulcano plot}
-table <- RNAlistRDS005_df %>%
-  mutate(logFC_rank = rank(-abs(logFC))) %>%
-  mutate(p_adj.loc_rank = rank(p_adj.loc)) %>%
-  mutate(padj.loc_logFC_rank = (logFC_rank + p_adj.loc_rank)) %>%
-  mutate(padj.loc_logFC10_rank = (10*logFC_rank + p_adj.loc_rank)) %>%
-  mutate(padj.loc_logFC100_rank = (100*logFC_rank + p_adj.loc_rank)) %>%
-  arrange(AveExpr)
-table_overlapping <- table[table$gene %in% CellCnnsig$gene,]
-
-#table200 <- table %>% arrange(mean_rank) %>% slice_head(n = 300)
-
-# Create vulcano plot
-p1 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC_rank, slice_head300") +
-  theme_minimal()
-p1
-  
-p2 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC10_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC10_rank, slice_head300") +
-  theme_minimal()
-p2
-
-p3 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC100_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC100_rank, slice_head300") +
-  theme_minimal()
-p3
-
-p4 <- ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = RNAlistRDS005_df, aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = RNAlistRDS005_df %>% dplyr::filter(CellCnnsig == "overlapping"),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "Scatter Plot",
-       color = "CellCnnsigE042A011A012") +
-  theme_minimal()
-p4
-
-p5 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.3, 25, by = 5),
-                       limits = c(18.3, 25),
-                       labels = as.character(seq(18.3, 25, by = 5)))
-p5
-p6 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.5, 25, by = 5),
-                       limits = c(18.5, 25),
-                       labels = as.character(seq(18.5, 25, by = 5)))
-p6
-plot_grid(p1,p2,p3,p4,p5,p6, ncol=3)
-
-
-
-#Keep in mind to remove gene duplicates before giving ShSh the list
-```
-
-```{r Make rank by padj.loc and logFC and AveExpr and evaluate in vulcano plot}
-table <- RNAlistRDS005_df %>%
-  mutate(logFC_rank = rank(-abs(logFC))) %>%
-  mutate(p_adj.loc_rank = rank(p_adj.loc)) %>%
-  mutate(AveExpr_rank = rank(-AveExpr)) %>%
-  mutate(padj.loc_logFC_AveExpr_rank = (logFC_rank + p_adj.loc_rank + AveExpr_rank)) %>%
-  mutate(padj.loc_logFC10_AveExpr_rank = (10*logFC_rank + p_adj.loc_rank + AveExpr_rank)) %>%
-  mutate(padj.loc_10logFC_10AveExpr_rank = (logFC_rank + p_adj.loc_rank + 10*AveExpr_rank)) %>%
-  arrange(AveExpr)
-table_overlapping <- table[table$gene %in% CellCnnsig$gene,]
-#table200 <- table %>% arrange(mean_rank) %>% slice_head(n = 300)
-
-# Create vulcano plot
-p1 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC_AveExpr_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC_AveExpr_rank, slice_head300") +
-  theme_minimal()
-p1
-  
-p2 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC10_AveExpr_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC10_AveExpr_rank, slice_head300") +
-  theme_minimal()
-p2
-
-p3 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_10logFC_10AveExpr_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_10logFC_10AveExpr_rank, slice_head300") +
-  theme_minimal()
-p3
-
-p4 <- ggplot(table_overlapping, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "table_overlapping") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.3, 25, by = 5),
-                       limits = c(18.3, 25),
-                       labels = as.character(seq(18.3, 25, by = 5)))
-p4
-
-p5 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.3, 25, by = 5),
-                       limits = c(18.3, 25),
-                       labels = as.character(seq(18.3, 25, by = 5)))
-p5
-p6 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.5, 25, by = 5),
-                       limits = c(18.5, 25),
-                       labels = as.character(seq(18.5, 25, by = 5)))
-p6
-plot_grid(p1,p2,p3,p4,p5,p6, ncol=3)
-
-
-
-#Keep in mind to remove gene duplicates before giving ShSh the list
-```
-
-```{r Make rank by padj.loc and logFC, AveExpr > 18.5 and evaluate in vulcano plot}
-table <- RNAlistRDS005_df %>%
-  dplyr::filter(AveExpr > 18.5) %>%
-  mutate(logFC_rank = rank(-abs(logFC))) %>%
-  mutate(p_adj.loc_rank = rank(p_adj.loc)) %>%
-  mutate(padj.loc_logFC_rank = (logFC_rank + p_adj.loc_rank)) %>%
-  mutate(padj.loc_logFC10_rank = (10*logFC_rank + p_adj.loc_rank)) %>%
-  mutate(padj.loc_logFC2_rank = (2*logFC_rank + p_adj.loc_rank)) %>%
-  arrange(AveExpr)
-table_overlapping <- table[table$gene %in% CellCnnsig$gene,]
-
-
-#Histogram
-# Create the barplot
-summary_data <- table %>%
-  group_by(cluster_id, stage, CellCnnsig) %>%
-  dplyr::summarize(Freq = n())
-# Create the barplot with color by CellCnnsig
-
-# Create the barplot with a log2 scale on the y-axis
-ggplot(summary_data, aes(x = cluster_id, y = Freq, fill = CellCnnsig)) +
-  geom_bar(position = "stack", stat = "identity") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  facet_wrap(~stage, scales = "free_x", ncol = 4) +
-  scale_y_break(c(40, 50), scales = 0.3)
-
-#table200 <- table %>% arrange(mean_rank) %>% slice_head(n = 300)
-
-# Create vulcano plot
-p1 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC_rank, slice_head300") +
-  theme_minimal()
-p1
-  
-p2 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC10_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC10_rank, slice_head300") +
-  theme_minimal()
-p2
-
-p3 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = table,
-             aes(color = "Non-overlapping"), size = 1) +
-  geom_point(data = table %>% arrange(padj.loc_logFC2_rank) %>% slice_head(n = 300),
-             aes(color = "overlapping"), size = 2) +
-  scale_color_manual(values = c("Non-overlapping" = "black", "overlapping" = "purple")) +
-  labs(title = "padj.loc_logFC2_rank, slice_head300") +
-  theme_minimal()
-p3
-
-p4 <- ggplot(table_overlapping, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "table_overlapping") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.5, 25, by = 5),
-                       limits = c(18.5, 25),
-                       labels = as.character(seq(18.5, 25, by = 5)))
-p4
-
-p5 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.3, 25, by = 5),
-                       limits = c(18.3, 25),
-                       labels = as.character(seq(18.3, 25, by = 5)))
-p5
-p6 <- ggplot(table, aes(x = logFC, y = -log10(p_adj.loc), color = AveExpr)) +
-  geom_point() +
-  labs(title = "RNAlistRDS005_df") +
-  theme_minimal() +
-  scale_colour_gradientn(colours = rev(rainbow(5)),
-                       breaks = seq(18.5, 25, by = 5),
-                       limits = c(18.5, 25),
-                       labels = as.character(seq(18.5, 25, by = 5)))
-p6
-plot_grid(p1,p3,p2,p4,p6, ncol=3)
-
-
-
-#Keep in mind to remove gene duplicates before giving ShSh the list
-```
-
-```{r df of table()s }
-metadata <- read.csv("/home/common/data/output/projects/ENDO/E044/A006/Metadata_allE044_filtered.csv")
-df <- data.frame(unclass(table(metadata$EndometriosisStatus,metadata$CyclePhases)))
-df <- df %>%
-  rename(Mid.Secretory = Secretory) %>%
-  select(Proliferative, Early.Secretory, Mid.Secretory, Late.Secretory)  
-
-```
-
-```{r VlnPlots of SLPI and NFKBIA for epithelial cells}
-epithelial <- readRDS("/home/common/data/output/projects/ENDO/E044/A066/epithelial.rds")
-#Filter by proliferative samples used for the DEG analysis
-samples <- unique(read.csv("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/celltype_freq_sample.csv")$Var2)
-Idents(epithelial) <- epithelial$sample
-epithelial_prolif <- subset(epithelial, idents = samples) 
-
-#VlnPlot
-p1 <- VlnPlot(epithelial_prolif, features = c("SLPI"), assay = "RNA",group.by = "sample", pt.size = 0,split.by = "EndometriosisStatus") + ylim(0,100) +
-stat_summary(fun.y = median, geom='point', size = 5, colour = "black", shape = 95) + ggtitle("SLPI, RNA assay")
-p2 <- VlnPlot(epithelial_prolif, features = c("NFKBIA"), assay = "RNA",group.by = "sample", pt.size = 0,split.by = "EndometriosisStatus") +
-stat_summary(fun.y = median, geom='point', size = 5, colour = "black", shape = 95) + ggtitle("NFKBIA, RNA assay")
-p3 <- VlnPlot(epithelial_prolif, features = c("SLPI"), assay = "SCT",group.by = "sample", pt.size = 0,split.by = "EndometriosisStatus") +
-stat_summary(fun.y = median, geom='point', size = 5, colour = "black", shape = 95)+ ggtitle("SLPI, SCT assay")
-p4 <- VlnPlot(epithelial_prolif, features = c("NFKBIA"), assay = "SCT",group.by = "sample", pt.size = 0,split.by = "EndometriosisStatus") +
-stat_summary(fun.y = median, geom='point', size = 5, colour = "black", shape = 95)+ ggtitle("NFKBIA, SCT assay")
-plot_grid(p1,p3,p2,p4, ncol=2)
-ggsave(plot = plot_grid(p1,p3,p2,p4, ncol=2), paste0(dir_out, "SLPI_NFKBIA_epithelial_prolif_RNASCT.png"))
-
-
-##Calculate mean/median SLPI/NKKBIA expression per sample for SCT assay
-expression_values <- GetAssayData(object = epithelial_prolif, assay = "SCT")[c("SLPI", "NFKBIA"), ]
-expression_df <- as.data.frame(t(as.matrix(expression_values)))
-expression_df$sample <- gsub("_.*", "", rownames(expression_df))
-mean_values <- aggregate(. ~ sample, data = expression_df, FUN = mean)
-median_values <- aggregate(. ~ sample, data = expression_df, FUN = median)
-# Combine mean and median values into a single table
-result_table_SCT <- data.frame(
-  sample_SCT = mean_values$sample,
-  SLPI_mean_SCT = mean_values$SLPI,
-  SLPI_median_SCT = median_values$SLPI,
-  NFKBIA_mean_SCT = mean_values$NFKBIA,
-  NFKBIA_median_SCT = median_values$NFKBIA
-)
-
-##Calculate mean/median SLPI/NKKBIA expression per sample for RNA assay
-expression_values <- GetAssayData(object = epithelial_prolif, assay = "RNA")[c("SLPI", "NFKBIA"), ]
-expression_df <- as.data.frame(t(as.matrix(expression_values)))
-expression_df$sample <- gsub("_.*", "", rownames(expression_df))
-mean_values <- aggregate(. ~ sample, data = expression_df, FUN = mean)
-median_values <- aggregate(. ~ sample, data = expression_df, FUN = median)
-# Combine mean and median values into a single table
-result_table_RNA <- data.frame(
-  sample = mean_values$sample,
-  SLPI_mean_RNA = mean_values$SLPI,
-  SLPI_median_RNA = median_values$SLPI,
-  NFKBIA_mean_RNA = mean_values$NFKBIA,
-  NFKBIA_median_RNA = median_values$NFKBIA
-)
-
-#combine RNA and SCT assay and add EndometriosisStatus condition to df
-result_table <- cbind(result_table_RNA,result_table_SCT)
-sample_EndometriosisStatus <- epithelial_prolif@meta.data %>% select(c("sample","EndometriosisStatus")) %>% distinct()
-result_table <- left_join(result_table,sample_EndometriosisStatus, by = "sample")
-write.csv(result_table,"mean_median_SLPI_NFKBIA_epithelial_prolif_RNASCT.csv")
-
-```
-
-```{r Make vulcano plots for DEGs colored by major cell types}
-##RNA assay DEGs from proliferative samples
-RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv")
-##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
-hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes
-mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes
-rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes
-RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  dplyr::filter(!gene %in% c(hb.genes, mt.genes, rb.genes)) %>%
-  dplyr::filter(annotation_reference == "Tan") %>%
-  dplyr::filter(AveExpr > 18.53202)
-##Rename cluster_id to major cell types
-meta <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_metadata.rds")
-meta$Symphony_Refined[meta$Symphony_Refined == "M$\\Phi$1-LYVE1"] <- "M-Phi-1-LYVE1"
-meta$Symphony_Refined[meta$Symphony_Refined == "glandular early-secretory"] <- "glandular-early-secretory"
-meta <- meta %>% 
-  select(AnnotationMain,Symphony_Refined,Symphony_Refined_A029_United) %>%
-  distinct()
-  
-RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  mutate(AnnotationMain = cluster_id)
-RNAlistRDS005_df$AnnotationMain <- case_when(
-  RNAlistRDS005_df$AnnotationMain %in% meta$Symphony_Refined ~ meta$AnnotationMain[match(RNAlistRDS005_df$AnnotationMain, meta$Symphony_Refined)],
-  RNAlistRDS005_df$AnnotationMain %in% meta$Symphony_Refined_A029_United ~ meta$AnnotationMain[match(RNAlistRDS005_df$AnnotationMain, meta$Symphony_Refined_A029_United)],
-  TRUE ~ RNAlistRDS005_df$AnnotationMain)
-RNAlistRDS005_df$AnnotationMain[RNAlistRDS005_df$AnnotationMain == "myeloid" |
-                                      RNAlistRDS005_df$AnnotationMain == "lymphocyte"] <- "immune"
-
-
-##Plot
-ggplot(RNAlistRDS005_df, aes(x = logFC, y = -log10(p_adj.loc), color = AnnotationMain)) +
-  geom_point(size = 1) +
-  #theme_minimal() +
-  facet_wrap(~stage)
-ggsave(filename = paste0(dir_out, 'vulcano_DEG_stage_main4.pdf'), width =7,height=4)
-
-ggplot(RNAlistRDS005_df, aes(x = AnnotationMain, fill = cluster_id)) +
-  geom_bar(stat = "count", position = "stack", width = 0.7) +  
-  # theme_minimal() +  
-  facet_wrap(~stage) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
-ggsave(filename = paste0(dir_out, 'vulcano_DEG_stage_main5.pdf'), width =7,height=4)
-
-```
-
-```{r Captum scores}
-#Load captum scores and combine tables
-all_cells_corrgpca <- read.csv("/home/common/data/output/projects/ENDO/E042/A011/sigs/weighted_score_sig_corrgpca_eval_20pc_pcs.csv")
-all_cells_corrgpca$dataset <- "all_cells_corrgpca"
-all_cells_pca <- read.csv("/home/common/data/output/projects/ENDO/E042/A012/sigs/weighted_score_sig_pca_1pc.csv")
-all_cells_pca$dataset <- "all_cells_pca"
-
-##RNA assay DEGs from proliferative samples
-RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv")
-##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
-hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes
-mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes
-rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes
-RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  dplyr::filter(!gene %in% c(hb.genes, mt.genes, rb.genes)) %>%
-  dplyr::filter(annotation_reference == "Tan") %>%
-  dplyr::filter(AveExpr > 18.53202)
-
-#Combine tables
-all_cells <- rbind(all_cells_pca,all_cells_corrgpca)
-all_cells <- left_join(all_cells, RNAlistRDS005_df, by = "gene") %>% 
-  arrange(desc(rank))
-
-```
-
-
+Supplementary Data Fig. 7a
 ```{r cycling fibroblasts}
-
 #LTs annotation for cycling fibroblasts
 data <- readRDS("/home/common/data/output/projects/ENDO/E031/A004/proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated.RDS")
 meta <- data@meta.data
@@ -2115,12 +1350,9 @@ cyclingfibs <- WhichCells(data_ds, idents = c("Cycling Fibroblasts"))
 DimPlot(data_ds, reduction = "umap", cells.highlight = cyclingfibs, cols.highlight = c("darkred"), cols= "grey", raster = FALSE)
 
 
-
-
-
 ```
 
-
+Figure 4e
 ```{r Barplots for  filter response median rank E042A027}
 #Load metadata
 meta_final <- readRDS("/home/common/data/output/projects/ENDO/E044/A074/dataA003A033_metadata_ptime_snn_Final.rds")
@@ -2184,7 +1416,6 @@ for (ann in ANNOTATION) {
 
 ```
 
-
 ```{r UMAPs for  filter response median rank E042A027}
 #Load data and metadata
 data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
@@ -2227,25 +1458,7 @@ p2 <- DimPlot(data, reduction = "umap", cells.highlight = control_true_cells, co
 
 ```
 
-```{r make DEG table for paper}
-#RNA assay DEGs from proliferative samples
-RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv") %>%
-  filter(annotation_reference == "Tan") %>%
-  filter(AveExpr > 18.53202)
-##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
-hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes, there are no hb genes in the DEG list
-RNAlistRDS005_df[RNAlistRDS005_df$gene %in% hb.genes, ]#no hb genes
-#mitochondrial genes
-mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes, no genes
-rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes, 77 genes
-RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  dplyr::filter(!gene %in% rb.genes)
-
-write.csv(RNAlistRDS005_df, paste0(dir_out,"RNAlistRDS005_AveExpr18.53202_noRBgenes.csv"))
-
-length(unique(RNAlistRDS005_df$gene)) #427
-```
-
+Supplementary Data Figure 6c
 ```{r}
 
 metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
@@ -2315,3 +1528,22 @@ dev.off()
 
 ```
 
+make DEG table for paper
+```{r}
+#RNA assay DEGs from proliferative samples
+RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv") %>%
+  filter(annotation_reference == "Tan") %>%
+  filter(AveExpr > 18.53202)
+##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
+hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes, there are no hb genes in the DEG list
+RNAlistRDS005_df[RNAlistRDS005_df$gene %in% hb.genes, ]#no hb genes
+#mitochondrial genes
+mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes, no genes
+rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes, 77 genes
+RNAlistRDS005_df <- RNAlistRDS005_df %>%
+  dplyr::filter(!gene %in% rb.genes)
+
+write.csv(RNAlistRDS005_df, paste0(dir_out,"RNAlistRDS005_AveExpr18.53202_noRBgenes.csv"))
+
+length(unique(RNAlistRDS005_df$gene)) #427
+```

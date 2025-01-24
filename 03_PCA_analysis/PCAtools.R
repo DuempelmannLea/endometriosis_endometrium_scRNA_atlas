@@ -1,86 +1,147 @@
 
 ###############################################
-### Load Libraries and define dir_out
+### Load Libraries and set path links
 ###############################################
 
+#Load libraries
 library(PCAtools)
 library(Seurat)
-library(dplyr)
-library(tibble)
-library(stringr)
-library(ggplot2)
-library(cowplot)
-library(ggbreak) 
-library(patchwork)
-library(ComplexUpset)
-library(ggrepel)
 
-dir_out <- ""
+
+##Set paths
+dir_ENDO <- "/home/duempelmann/analysis-projects/ENDO/E044/A085/endometriosis_endometrium_scRNA_atlas/"
+dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
 dir.create(dir_out, recursive = TRUE)
 
 
+###############################################
+### Load Data
+###############################################
+##Load Data
+EndoAtlas <- readRDS(paste0(dir_ENDO, "_Data/EndoAtlas.rds"))
+
 
 ###############################################
-### Prepare Data and run PCA
+### Entire EndoAtlas: Data preparation and Conduct PCA
 ###############################################
 
-##Aggregate Expression per sample 
-data <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033.rds")
-bulk <- AggregateExpression(data, group.by = "sample", assay = "integrated", return.seurat = TRUE)
-
+##Data preparation
+#Aggregate Expression per sample 
+bulk <-  AggregateExpression(EndoAtlas, group.by = "sample", assay = "SCT", return.seurat = TRUE)
 # Extract counts matrix
-mat <- bulk[["integrated"]]@data
+mat <- bulk[["SCT"]]$data
+
+
+##Modify Metadata to match mat
+EndoAtlas_meta <- EndoAtlas@meta.data  %>%
+  distinct()
+# Reorder EndoAtlas_meta to match the order of columns in mat
+EndoAtlas_meta <- EndoAtlas_meta[match(colnames(mat), EndoAtlas_meta$sample), ]
+# Set the row names of EndoAtlas_meta to be the reordered sample column
+rownames(EndoAtlas_meta) <- EndoAtlas_meta$sample
+## check that sample names match exactly between pdata and expression data 
+all(colnames(mat) == rownames(EndoAtlas_meta))
+## [1] TRUE
 
 ##Conduct principal component analysis (PCA):
-p <- pca(mat, metadata = metadata, removeVar = 0.1)
+p <- pca(mat, metadata = EndoAtlas_meta, removeVar = 0.1)
+
+##save pca file
+saveRDS(p, paste0(dir_out,"p_EndoAtlas.rds"))
+
+##Remove variables
+rm(bulk, mat, EndoAtlas_meta, p)
 
 
 
 ###############################################
-### Plotting with PCAtools
+### DEG samples: Data preparation and Conduct PCA
 ###############################################
 
-##Bi-plots
-biplot1 <-    biplot(p,
-                     colby = 'FinalPhaseRefined',
-                     labSize = 0,drawConnectors = FALSE, 
-                     hline = 0, vline = 0,
-                     legendPosition = 'right')
-ggsave(
-  filename = paste0(dir_out,"FinalPhaseRefined.pdf"),
-  plot = biplot1,
-  width = 7,
-  height = 5)
+##Data preparation
+#Subset DEG samples
+Idents(EndoAtlas) <- EndoAtlas$DEG.analysis..Figure.3a.b.
+EndoAtlas <- subset(EndoAtlas, idents = "TRUE")
 
-biplot2 <-   biplot(p,
-                    colby = 'Wang_epi_pseudot',
-                    labSize = 0,drawConnectors = FALSE, 
-                    hline = 0, vline = 0,
-                    legendPosition = 'right')
-ggsave(
-  filename = paste0(dir_out,"Wang_epi_pseudot.pdf"),
-  plot = biplot2,
-  width = 7,
-  height = 5)
+#Aggregate Expression per sample 
+bulk <-  AggregateExpression(EndoAtlas, group.by = "sample", assay = "SCT", return.seurat = TRUE)
+# Extract counts matrix
+mat <- bulk[["SCT"]]$data
 
-biplot3 <-   biplot(p,
-                    colby = 'treatment',
-                    labSize = 0,drawConnectors = FALSE, 
-                    hline = 0, vline = 0,
-                    legendPosition = 'right')
-ggsave(
-  filename = paste0(dir_out,"treatment.pdf"),
-  plot = biplot3,
-  width = 7,
-  height = 5)
 
-##eigencor plot
-pdf(paste0(dir_out,"eigencorplot.pdf"), width = 10, height = 5)
-eigencorplot(p,
-             metavars = c("sample","batch", "grade", "treatment", "ProgesteronePeritoneal", "ProgesteroneSerum", "CycleDay", "CyclePhaseMain","CyclePhase","CyclePhaseRefined"),
-             col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue')
-)
-dev.off()
+##Modify Metadata to match mat
+EndoAtlas_meta <- EndoAtlas@meta.data  %>%
+  distinct()
+# Reorder EndoAtlas_meta to match the order of columns in mat
+EndoAtlas_meta <- EndoAtlas_meta[match(colnames(mat), EndoAtlas_meta$sample), ]
+# Set the row names of EndoAtlas_meta to be the reordered sample column
+rownames(EndoAtlas_meta) <- EndoAtlas_meta$sample
+## check that sample names match exactly between pdata and expression data 
+all(colnames(mat) == rownames(EndoAtlas_meta))
+## [1] TRUE
 
-sessionInfo()
-date()
+##Conduct principal component analysis (PCA):
+p <- pca(mat, metadata = EndoAtlas_meta, removeVar = 0.1)
+
+##save pca file
+saveRDS(p, paste0(dir_out,"p_EndoAtlas_DEGsamples.rds"))
+
+##Remove variables
+rm(bulk, mat, EndoAtlas_meta, p)
+
+
+
+###############################################
+### Main cell types: Data preparation and Conduct PCA
+###############################################
+
+# Set Idents of EndoAtlas to AnnotationMain
+Idents(EndoAtlas) <- EndoAtlas$AnnotationMain
+
+#SUBSET <- "epithelial"
+subsets <- c("myeloid", "endothelial", "epithelial", "lymphocyte","stromal")
+
+#Function
+process_PCA <- function(SUBSET) {
+  print(SUBSET)
+  # subset with the main 5 cell types
+  subset <- subset(EndoAtlas,idents = SUBSET)
+  
+  # pseudobulk cells only by sample
+  bulk <- AggregateExpression(subset, group.by = "sample", assay = "SCT", return.seurat = TRUE)
+    # Extract counts matrix
+  mat <- bulk[["SCT"]]$data 
+
+  ##Modify Metadata to match mat
+  subset_meta <- subset@meta.data  %>%
+    distinct()
+  # Reorder EndoAtlas_meta to match the order of columns in mat
+  subset_meta <- subset_meta[match(colnames(mat), subset_meta$sample), ]
+  # Set the row names of EndoAtlas_meta to be the reordered sample column
+  rownames(subset_meta) <- subset_meta$sample
+  
+
+  ## check that sample names match exactly between pdata and expression data 
+  all(colnames(mat) == rownames(subset_meta))
+  ## [1] TRUE
+  
+  ##Conduct principal component analysis (PCA):
+  p <- pca(mat, metadata = subset_meta, removeVar = 0.1)
+
+  ##save pca file
+  saveRDS(p, paste0(dir_out,"p_EndoAtlas_",SUBSET,".rds"))
+  
+  gc()
+  
+}
+
+lapply(subsets, process_PCA)
+
+rm(data)
+gc()
+
+
+###############################################
+### Save sessionInfo
+###############################################
+writeLines(capture.output(sessionInfo()), paste0(dir_out,"sessionInfo.txt"))
