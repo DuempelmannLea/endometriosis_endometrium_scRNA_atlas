@@ -693,11 +693,12 @@ xxx double-check code
 Supplementary Data Figure 1e
 Eigencor plot showing the effect of different co-variants of the atlas dataset on principal components (PCs) of the proliferative samples with strict exclusion criteria with Pearson correlation values and multiple-testing adjustment with the Benjamini-Hochberg procedure.
 ```{r}
+# Set dir_out
 dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
-
+# Load CellChat object
 p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_DEGsamples.rds"))
 
-#Figure 1e
+# eigencorplot for Figure 1e
 pdf(paste0(dir_out,"eigencorplot_final_BH.pdf"), width = 10, height = 5)
 eigencorplot(p,
     metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
@@ -717,8 +718,9 @@ subsets <- c("myeloid", "endothelial", "epithelial", "lymphocyte","stromal")
 
 #Plot eigencorplots for the main annotations
 plotting_PCA <- function(SUBSET) {
+    # Load data    
     p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_",SUBSET,".rds"))
-      
+    # plot eigencorplot and save  
     pdf(paste0(dir_out,"eigencorplot_final_BH_",SUBSET,".pdf"), width = 10, height = 5)
     eigencorplot(p,
     metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
@@ -865,29 +867,33 @@ SFig3a <- biplot(p,
     labSize = 0,drawConnectors = FALSE, 
     hline = 0, vline = 0,
     legendPosition = 'right')
+# save biplot
 ggsave(plot = SFig3a, "./SFig3a.pdf", width = 7, height = 7)
 ```
 
 Supplementary Figure 3b and e
-UMAP of re-integrated epithelial cells colored by menstrual cycle day and menstrual cycle phase Wang
+UMAP of re-integrated epithelial cells colored by menstrual cycle day and menstrual cycle phase Wang. UMAP of the entire dataset colored by the Symphony transferred Wang phases, show a clear visual separation between phase 1/2, phase 3, and phase 4. 
 ```{r}
+# Load data
 epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
 
-#Menstrual Cycle Day
+#Plot UMAP with Menstrual Cycle Day
 SFig3b <- plot_cells(epithelial_cells_monocle3, color_cells_by = "CycleDay",
                      label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
                      graph_label_size=3, cell_size = 1)
 SFig3b
+# save UMAP
 ggsave(filename = paste0(dir_out, 'SFig3b.pdf'),
        plot = SFig3b,
        width =20, height=9)
 
 
-#Menstual Cycle Phase Wang
+#Plot UMAP with Menstual Cycle Phase Wang
 SFig3e <- plot_cells(epithelial_cells_monocle3 , color_cells_by = "WangMenstrualCyclePhase",
                      label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
                      graph_label_size=3, cell_size = 1)
 SFig3e
+# save UMAP
 ggsave(filename = paste0(dir_out, 'SFig3e.pdf'),
        plot = SFig3e,
        width =20, height=9)
@@ -895,25 +901,22 @@ ggsave(filename = paste0(dir_out, 'SFig3e.pdf'),
 
 ```
 
-xxxsee above for object name in GEO
+
 Supplementary Data Figure 3c
-Look in IBU folder for object with trajectory line or A063/A066
+Scatter plots showing the correlation of menstrual cycle day and serum progesterone with our menstrual cycle staging (c) and median Wang phases (d), transferred with Symphony (d).
 ```{r}
-#Figure S3c epithelial cells
-FeaturePlot
-Fig3c <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCycleDay", raster = FALSE)
-Fig3c
-ggsave(filename = paste0(dir_out, 'Fig3c.pdf'),
-       plot = Fig3c,
-       width =20, height=9)
+xxx missing
+
+
 ```
 
 Supplementary Data Figure 3f
-CODE OK
+UMAP of the entire dataset colored by the Symphony transferred Wang phases, show a clear visual separation between phase 1/2, phase 3, and phase 4. 
 ```{r}
-#Figure 2b entire atlas
-Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "Wang2020Phase", raster = FALSE)
+## Figure 2b UMAP entire atlas
+Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "WangMenstrualCyclePhase", raster = FALSE)
 Fig2b_1
+# Save UMAP
 ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
        plot = Fig2b_1,
        width =20, height=9)
@@ -921,7 +924,7 @@ ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
 ```
 
 Supplementary Data Figure 3 g
-CODE OK
+Heatmap showing the expression of menstrual cycle phase markers (as in Fig. 2d) of the eutopic endometrial epithelial cells (g) from the Tan et al. 2022 single-cell atlas.
 ```{r}
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
 #cd endometriosis_endometrium_scRNA_atlas/_Data
@@ -986,7 +989,7 @@ ggsave(
 ```
 
 Supplementary Data Figure 3 h
-CODE OK
+Heatmaps showing the expression of menstrual cycle phase markers (as in Fig. 2d) of the eutopic endometrial mesenchymal cells (h) from the Tan et al. 2022 single-cell atlas.
 ```{r}
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
 #cd endometriosis_endometrium_scRNA_atlas/_Data
@@ -1051,7 +1054,7 @@ ggsave(
 ```
 
 Supplementary Data Figure 4a
-CODE OK
+Bar plot of cell type frequencies per sample, sorted by menstrual cycle phase and pseudo time and divided by the main 5 cell types. 
 ```{r plotting of cell types per sample}
 ##Barplots of cell type frequency split by the main 5 cell types
 
@@ -1062,14 +1065,14 @@ names(P63) <- NULL
 
 
 #Make df with number of AnnotationRefined cells in each sample
-df <- EndoAtlas_meta%>%
+SFig4a_df <- EndoAtlas_meta%>%
   filter(!is.na(AnnotationMain)) %>%
   group_by(sample, AnnotationMain, AnnotationRefined, EndometriosisGrade, MenstrualCyclePhase, epithelial.pseudotime, EndometriosisStatus) %>%
   summarise(row_count = n()) %>%
   ungroup() 
 
 #Make bar plot
-p <- ggplot(df, aes(x = sample, y = row_count, fill = AnnotationRefined)) +
+SFig4a <- ggplot(SFig4a_df, aes(x = sample, y = row_count, fill = AnnotationRefined)) +
   geom_bar(stat = 'identity', position = 'fill') +
   scale_y_continuous(expand = c(0, 0)) +
   scale_fill_manual(values = sample(P63)) +
@@ -1080,17 +1083,17 @@ p <- ggplot(df, aes(x = sample, y = row_count, fill = AnnotationRefined)) +
     panel.grid.major.y = element_line(colour = "lightgray", size = 0.5)
   ) +
   facet_grid(AnnotationMain ~ ., scales = "free_y")
-p
+SFig4a
 #Save barplot
 ggsave(paste0(dir_out, "SFig4a_barplot.pdf"),
-       plot = p,
+       plot = SFig4a,
        width = 15, height = 6)
 
 ```
 
 
 Supplementary Data Figure 4b
-CODE OK
+Box plots of refined cell type frequencies between the main menstrual cycle phases. 
 ```{r plotting of cell types per sample}
 ##########################################################################################
 ##Plot differences for samples without minor exclusion criteria
@@ -1111,7 +1114,7 @@ SFig4b <- EndoAtlas_meta%>%
 SFig4b <- left_join(SFig4b, dplyr::distinct(EndoAtlas_meta[,c("sample","EndometriosisStatus","MenstrualCyclePhase_main")]), by = "sample")
 write.csv(SFig4b, paste0(dir_out,"SFig4b_AnnotationRefined_frequency.csv"))
 
-#BoxPlots percentage, EndometriosisStatus, percentage ###for paper Extended Data Fig. S4
+# BoxPlots percentage, EndometriosisStatus, percentage ###for paper Extended Data Fig. S4
 ggplot(SFig4b, aes(x = MenstrualCyclePhase_main, y = AnnotationRefined_perc, fill = EndometriosisStatus)) +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(colour = EndometriosisStatus),
@@ -1120,7 +1123,7 @@ ggplot(SFig4b, aes(x = MenstrualCyclePhase_main, y = AnnotationRefined_perc, fil
   facet_wrap(~AnnotationRefined, scales = "free", ncol = 7) +
   theme_bw() +
   expand_limits(y = 0)
-  
+# Save BoxPlots
 ggsave(paste0(dir_out, "SFig4b_EndometriosisStatus_perc.pdf"),
   plot = last_plot(),
   width = 20, height = 12)
@@ -1147,6 +1150,7 @@ write.csv(SFig4b_ttest_EndometriosisStatus, paste0(dir_out,"SFig4b_ttest_Endomet
 ```
 
 Supplementary Data Figure 5a
+Genes underlying selected pathways enriched in the cluster- and stage-wise functional enrichment analysis.
 ```{r}
 DEGs
 
@@ -1156,8 +1160,16 @@ DEGs
 
 ```
 
+
+
 Supplementary Data Figure 5b-d
+(b) Signaling pathways with relative information flow from CellChat analysis, ranked by overall information flow within the inferred networks between ENDO and non-ENDO.
+(c) Circle plot of TGFb signaling pathway between all cell types in ENDO (top) and non-ENDO (bottom, no significant interactions).
+(d) Bubble plot of selected communication probabilities with significant interaction probabilities (unadjusted p-value < 0.01)  within the TNF signaling pathway.
 ```{r}
+#Load CellChat data
+cellchat <- readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
+
 
 #Figure 3c and Supplementary Figure 5b
 gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
@@ -1165,9 +1177,6 @@ gk1
 ggsave(plot = gk1,
        filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
 
-
-#Load CellChat data
-cellchat <- readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
 
 #Supplementary Data Figure 5d TNF
 netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("TNF"), remove.isolate = FALSE) 
