@@ -67,7 +67,7 @@ While the code is available for reuse, it is primarily provided as a resource to
 
 ### **Acknowledgment**
 We would like to acknowledge the additional authors of the accompanying publication for their invaluable contributions to this project:
-Jitka Skrabalova, Brett McKinnon, Thomas Andrieu, Wiebke Solass, Cinzia Donato, Ryan Lusby, Sarah Carl, Peter Nestorov, and Michael D. Mueller.
+Jitka Skrabalova, Brett McKinnon, Thomas Andrieu, Wiebke Solass, Cinzia Donato, Peter Nestorov, and Michael D. Mueller.
 
 ## **Contact**
 
