@@ -19,51 +19,6 @@ setwd(dir_out)
 ```
 
 
-For Shaoline, also looking at BH readjustment
-```{r}
-##Combine muscat output into one dataframe
-PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/A030"), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
-PATHS <- c("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/data/res_mm_dream.rds",
-           "/home/common/data/output/projects/ENDO/E044/A030/myeloid_lymphocyte_epithelial_endothelial_Tan/data/res_mm_dream.rds",
-           "/home/common/data/output/projects/ENDO/E044/A030/stromal_Tan/data/res_mm_dream.rds",
-           "/home/common/data/output/projects/ENDO/E044/A030/united_celltypes_Tan/data/res_mm_dream.rds")                         
-
-# Load data from files
-print(PATHS)
-RNAlistRDS <- lapply(PATHS, readRDS)
-
-# Assign names based on PATHS
-names(RNAlistRDS) <- PATHS
-
-#combine sub-lists
-RNAlistRDS <- unlist(RNAlistRDS, recursive = FALSE) 
-
-# Filter without BH adjustment 
-##BH adjustment before AveExpr filtering is identical to p_adj.loc, BH adjustment after AveExpr filtering leads to very few significant genes
-RNAlistRDS005 <- lapply(RNAlistRDS, function(x) {
-  dplyr::filter(x, AveExpr > 18.53202 & p_adj.loc < 0.05)
-})
-RNAlistRDS005 <- as.data.frame(do.call(rbind, RNAlistRDS005))
-
-##exclude ribosomal genes (comment: does not change the inflection point)
-rb.genes_DEGs <- unique(grep(pattern = "^RP[SL]", RNAlistRDS005$gene, value=TRUE)) #around 150 unique rb genes
-RNAlistRDS005 <- RNAlistRDS005[!(RNAlistRDS005$gene %in% rb.genes_DEGs), ]
-
-
-# Filter with BH adjustment after AveExpr filtering leads to very few significant genes
-RNAlistRDS005BH <- lapply(RNAlistRDS, function(x) {
-  x <- dplyr::filter(x, AveExpr > 18.53202)
-  x$p_adj.BH <- p.adjust(x$p_val, method = "BH")
-  dplyr::filter(x, p_adj.BH < 0.05)
-})
-RNAlistRDS005BH <- as.data.frame(do.call(rbind, RNAlistRDS005BH))
-
-
-
-```
-
-
-
 Determine inflection point based on unfiltered DEGs
 ```{r}
 ##Combine muscat output into one dataframe
