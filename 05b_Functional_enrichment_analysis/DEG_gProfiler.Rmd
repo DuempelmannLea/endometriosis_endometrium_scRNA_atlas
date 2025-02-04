@@ -18,6 +18,52 @@ dir_out <- "/home/common/data/output/projects/ENDO/E044/A031/"
 setwd(dir_out)
 ```
 
+
+For Shaoline, also looking at BH readjustment
+```{r}
+##Combine muscat output into one dataframe
+PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/A030"), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
+PATHS <- c("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/data/res_mm_dream.rds",
+           "/home/common/data/output/projects/ENDO/E044/A030/myeloid_lymphocyte_epithelial_endothelial_Tan/data/res_mm_dream.rds",
+           "/home/common/data/output/projects/ENDO/E044/A030/stromal_Tan/data/res_mm_dream.rds",
+           "/home/common/data/output/projects/ENDO/E044/A030/united_celltypes_Tan/data/res_mm_dream.rds")                         
+
+# Load data from files
+print(PATHS)
+RNAlistRDS <- lapply(PATHS, readRDS)
+
+# Assign names based on PATHS
+names(RNAlistRDS) <- PATHS
+
+#combine sub-lists
+RNAlistRDS <- unlist(RNAlistRDS, recursive = FALSE) 
+
+# Filter without BH adjustment 
+##BH adjustment before AveExpr filtering is identical to p_adj.loc, BH adjustment after AveExpr filtering leads to very few significant genes
+RNAlistRDS005 <- lapply(RNAlistRDS, function(x) {
+  dplyr::filter(x, AveExpr > 18.53202 & p_adj.loc < 0.05)
+})
+RNAlistRDS005 <- as.data.frame(do.call(rbind, RNAlistRDS005))
+
+##exclude ribosomal genes (comment: does not change the inflection point)
+rb.genes_DEGs <- unique(grep(pattern = "^RP[SL]", RNAlistRDS005$gene, value=TRUE)) #around 150 unique rb genes
+RNAlistRDS005 <- RNAlistRDS005[!(RNAlistRDS005$gene %in% rb.genes_DEGs), ]
+
+
+# Filter with BH adjustment after AveExpr filtering leads to very few significant genes
+RNAlistRDS005BH <- lapply(RNAlistRDS, function(x) {
+  x <- dplyr::filter(x, AveExpr > 18.53202)
+  x$p_adj.BH <- p.adjust(x$p_val, method = "BH")
+  dplyr::filter(x, p_adj.BH < 0.05)
+})
+RNAlistRDS005BH <- as.data.frame(do.call(rbind, RNAlistRDS005BH))
+
+
+
+```
+
+
+
 Determine inflection point based on unfiltered DEGs
 ```{r}
 ##Combine muscat output into one dataframe
@@ -97,98 +143,6 @@ length(unique(RNAlistRDS005$gene)) #12115
 write.csv(RNAlistRDS005,"/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv")
 #RNAlistRDS005 <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv", row.names = 1)
 
-
-
-
-
-
-
-
-###Delete below ###########
-
-RNAlistRDS005 %>% dplyr::filter(logFC > 0.5) %>% nrow()
-RNAlistRDS005 %>% dplyr::filter(logFC < -0.5) %>% nrow()
-
-RNAlistRDS005 <- RNAlistRDS005 %>% dplyr::filter(annotation_reference == "Tan")
-###plotting
-plot(density(RNAlistRDS005$AveExpr))
-# bar plot of DEGs by condition
-df <- RNAlistRDS005 %>%
-  dplyr::group_by(cluster_id, stage, clustering,annotation_reference) %>%
-  dplyr::summarise(DEGs = n(), median_logFC = median(logFC), median_AveExpr = median(AveExpr), median_padjloc = median(p_adj.loc)) %>%
-  ungroup()
-ggplot(df, aes(x=stage, y = DEGs, fill=cluster_id)) +
-  geom_bar(stat='identity') +
-  scale_y_continuous(expand = c(0,0)) +
-  RotatedAxis() +
-  xlab('Sample ID') +
-  facet_wrap(~clustering,scales = "free_x", ncol = 4)
-ggsave(paste0(dir_out, "Barplot_cluster_id_stage_clustering.pdf"),
-  plot = last_plot(),
-  width = 15, height = 6)
-sum(df$DEGs)
-# bar plot of DEGs by condition with AveExpr > 18.5
-#There are extremely many DEGs in the clusters eF, epithelial and C7_Activated_Fibro, too many to be reliable. Median AveExpr seems to be lower in those clusters and gProfiler gave good results with a threshold of AveExpr>18.5. Therefore, I set the cut-off at AveExpr>18.5
-df18_3 <- RNAlistRDS005 %>%
-  dplyr::filter(AveExpr > 18.3) %>%
-  dplyr::group_by(cluster_id, stage, clustering,annotation_reference) %>%
-  dplyr::summarise(DEGs = n(), median_logFC = median(logFC), median_AveExpr = median(AveExpr), median_padjloc = median(p_adj.loc)) %>%
-  ungroup()
-df18_5 <- RNAlistRDS005 %>%
-  dplyr::filter(AveExpr > 18.5) %>%
-  dplyr::group_by(cluster_id, stage, clustering,annotation_reference) %>%
-  dplyr::summarise(DEGs = n(), median_logFC = median(logFC), median_AveExpr = median(AveExpr), median_padjloc = median(p_adj.loc)) %>%
-  ungroup()
-ggplot(df18_5, aes(x=stage, y = DEGs, fill=cluster_id)) +
-  geom_bar(stat='identity') +
-  scale_y_continuous(expand = c(0,0)) +
-  RotatedAxis() +
-  xlab('Sample ID') +
-  facet_wrap(~clustering,scales = "free_x", ncol = 4) +
-  ggtitle("AveExpr > 18.5")
-ggsave(paste0(dir_out, "Barplot_cluster_id_stage_clustering_AveExpr185.pdf"),
-  plot = last_plot(),
-  width = 15, height = 6)
-ggplot(df18_5, aes(x=stage, y = DEGs, fill=cluster_id)) +
-  geom_bar(stat='identity') +
-  scale_y_continuous(expand = c(0,0)) +
-  RotatedAxis() +
-  xlab('Sample ID')+
-  ggtitle("AveExpr > 18.5") 
-ggsave(paste0(dir_out, "Barplot_cluster_id_stage_AveExpr185.pdf"),
-  plot = last_plot(),
-  width = 6, height = 4)
-sum(df18_5$DEGs)
-
-# Count the number of genes in each combination of clustering and stage
-RNAcounts <- table(RNAlistRDS005$clustering, RNAlistRDS005$stage)
-pheatmap(RNAcounts)
-# Create the grouped bar plot
-ggplot(as.data.frame(RNAcounts), aes(x = Var1, y = Freq, fill = Var2)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(x = "Clustering", y = "Count", fill = "Stage") +
-  ggtitle("Count of Genes by Clustering and Stage") +
-  theme_bw() +
-  theme(plot.title = element_text(size = 14, face = "bold"),
-        axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Create vulcano plot
-ggplot(RNAlistRDS005, aes(x = logFC, y = -log10(p_adj.loc), color = cluster_id)) +
-  geom_point(data = RNAlistRDS005) +
-  theme_minimal() +
-  xlim(-0.8,1.3)
-ggsave(paste0(dir_out, "Vulcano_logFC_padjloc_clusterid.pdf"),
-  plot = last_plot(),
-  width = 6, height = 4)
-
-#scatter plot logFC, AveExpr
-ggplot(RNAlistRDS005, aes(x = AveExpr, y = logFC, color = cluster_id)) +
-  geom_point(data = RNAlistRDS005) +
-  theme_minimal()
-ggsave(paste0(dir_out, "Scatter_logFC_AveExpr_clusterid.pdf"),
-  plot = last_plot(),
-  width = 6, height = 4)
-plot(density(log2(RNAlistRDS005$AveExpr-16.97529)))
 ```
 
 
@@ -273,6 +227,91 @@ RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "Pe
 RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
 RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
 ```
+
+##Ongoing xxxx
+gProfiler based on RNA assay and per annotation with gene expression >18.53202 and BH pval adjusted
+```{r}
+##function to run gProfiler and save output
+gProfiler_FUN <- function(x,ANALYSIS,GRADE,ORDERED_QUERY,ASSAY,dir_out) {
+#gProfiler
+custom_bg <- unique(x$gene)
+query <- x %>%
+  dplyr::filter(AveExpr > 18.53202) %>%
+  dplyr::filter(p_adj.loc < 0.05) %>%
+  dplyr::arrange(p_adj.loc) #arrange by lowest p_adj.loc
+if(nrow(query) > 0){
+query <- distinct(query, gene, .keep_all= TRUE) #remove duplicates of gene with higher p_adj.loc
+query <- query$gene
+gostres <<- gost(query = query, 
+                organism = "hsapiens", 
+                ordered_query = ORDERED_QUERY, #can use TRUE, p_adj.loc has been arranged 
+                multi_query = FALSE, 
+                significant = TRUE, #only statistically significant results should be returned
+                exclude_iea = FALSE, 
+                measure_underrepresentation = FALSE, 
+                evcodes = TRUE,
+                user_threshold = 0.05, 
+                correction_method = "g_SCS", #g_SCS is default
+                domain_scope = "annotated", #if custom_bg is set, I believe this shouldn't matter too much
+                custom_bg = custom_bg, #custom background, use!
+                numeric_ns = "", 
+                sources = NULL, #by default all sources are analyzed
+                as_short_link = FALSE)
+if(length(gostres) > 0){
+results <- gostres$result
+results$cluster_id <- levels(as.factor(x$cluster_id))
+results$analysis <- print(ANALYSIS)
+results$assay <- print(ASSAY)
+results$grade <- print(GRADE) 
+results$ordered_query <- print(ORDERED_QUERY)
+results$parents <- NULL
+write.csv(results,paste0("gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".csv"))
+print(paste0("Saved gotres as gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".csv"))
+plot <- gostplot(gostres, capped = TRUE, interactive = FALSE) + ggtitle(paste0("gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY)))
+ggsave(plot = plot, filename = paste0(dir_out,"gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".png"), width = 7, height = 5)
+print("Saved plot")
+}
+}
+}
+##function to run gProfiler_FUN on different grades, analysis and assay
+RUN_gProfier <- function(GRADE, ANALYSIS,ASSAY,SPECIFICATION){
+dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E044",ANALYSIS,"/",ASSAY,"assay_",SPECIFICATION,"/")
+dir.create(dir_out, recursive = TRUE)
+setwd(dir_out)
+#Read paths to DEG output .rds files
+if (ASSAY == "RNA") { 
+    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
+    } else if (ASSAY == "SCT") {
+    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "mm_dream_sct_counts_all.rds", recursive = TRUE, full.names = TRUE)
+    }
+#Select paths based on all/mild/severe
+if (GRADE == "all") { 
+    PATHS <- PATHS[!grepl("_severe", PATHS)]
+    PATHS <- PATHS[!grepl("_mild", PATHS)]
+    print(PATHS)
+    } else if (GRADE == "mild") {
+    PATHS <- PATHS[grepl("_mild", PATHS)]
+    print(PATHS)
+    } else if  (GRADE == "severe") {
+    PATHS <- PATHS[grepl("_severe", PATHS)]
+    print(PATHS)
+    } 
+RNAlistRDS <- lapply(PATHS, readRDS)
+RNAlistRDS <- unlist(RNAlistRDS, recursive = FALSE) #combine sub-lists
+RNAlistRDS <- RNAlistRDS[!duplicated(RNAlistRDS)]
+lapply(RNAlistRDS, gProfiler_FUN, ANALYSIS = ANALYSIS,GRADE = GRADE,ORDERED_QUERY = FALSE, ASSAY = ASSAY, dir_out = dir_out)
+lapply(RNAlistRDS, gProfiler_FUN, ANALYSIS = ANALYSIS,GRADE = GRADE,ORDERED_QUERY = TRUE, ASSAY = ASSAY, dir_out = dir_out)
+}
+
+RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
+```
+
+
 
 ```{r Combine output tables from gProfiler}
 #functions
