@@ -1,0 +1,31 @@
+
+
+project: "Integration_epithelial_only"
+
+##1 . Path to input
+samples:
+  epithelial: "epithelial"
+
+##2. Path to output directories
+norm_output_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/normalization/"
+norm_output_list_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/normalization_list/"
+integration_output_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/integration/"
+mixing_metric_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/summary/"
+logs_output_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/logs/"
+subset_output_dir: "/endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/setup_subsets/"
+
+##3. Resources
+ncores_norm: 10
+memory_norm: 250000 
+
+ncores_seuratv3: 10
+memory_seuratv3: 250000
+
+ncores_cms: 5
+memory_cms: 20000
+
+## 4. params integration
+n_features_integration_hvg: 3000
+n_dimred_integration: 20
+reference_dataset: "batch17"
+

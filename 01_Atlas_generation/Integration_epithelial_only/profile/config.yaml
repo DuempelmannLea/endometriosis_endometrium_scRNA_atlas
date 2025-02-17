@@ -1,0 +1,10 @@
+use-conda: true
+cores: 12
+snakefile: /endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/Snakefile
+configfile: /endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only/config/config.yaml
+conda-prefix: /home/common/conda_envs/snakemake
+directory: /endometriosis_endometrium_scRNA_atlas/01_Atlas_generation/Integration_epithelial_only
+cluster-sync: /home/common/bin/submit_job.sh
+latency-wait: 300
+jobs: 10
+resources: mem_mb=250000
