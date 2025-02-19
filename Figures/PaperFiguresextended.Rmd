@@ -1169,10 +1169,121 @@ ggsave(plot = last_plot(),
 
 ```
 
+#Supplementary Data Figure 6a, b
+#Need to change path
+```{r barplot distribution of cv splits, all cells, prolif}
+meta <- read.csv("/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")
+
+library(reshape2)
+library(ggplot2)
+library(forcats)
+
+#Supplementary Data Figure 6a
+# reshape df
+melted_meta <- melt(meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+## create the bar plot for endo_EndometriosisGrade
+SFig6a <- ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
+  geom_bar(position = "stack", width = 0.7) +
+  facet_wrap(~ fct_rev(value), ncol = 2) +
+  labs(title = "Bar Plot of Samples by Endo EndometriosisGrade",
+       x = "Fold",
+       y = "Number of Samples") +
+  scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
+  theme_minimal() +
+  coord_flip()
+SFig6a
+ggsave(paste0(dir_out,"SFig6a_barplot.pdf"), plot = SFig6a, height = 6.3, width = 7.2)
+
+#Supplementary Data Figure 6b
+SFig6b <- ggplot(melted_meta, aes(x = variable, fill = lane)) +
+  geom_bar(position = "stack", width = 0.7) +
+  facet_wrap(~ fct_rev(value), ncol = 2) +
+  labs(title = "Bar Plot of Samples by lane",
+       x = "Fold",
+       y = "Number of Samples") +
+  #scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
+  theme_minimal() +
+  coord_flip()
+SFig6b
+ggsave(paste0(dir_out,"SFig6b_barplot.pdf"), plot = SFig6b, height = 6.3, width = 7.2)
+
+```
+
+Supplementary Data Figure 6c
+#Need to change path
+```{r}
+
+metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
+metadata$new_column <- NULL
+metadata$batch <- NULL
+
+
+# Remove 'names' column as it will be used as row labels
+row_names <- metadata$names
+metadata <- metadata[, -1]
+
+# Convert non-numeric columns to factors
+metadata[, c("EndometriosisStatus", "lane",  "endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
+
+
+
+# Create heatmap using ComplexHeatmap
+pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap.pdf"), width = 7, height = 9)
+Heatmap(metadata,
+        name = "Metadata",
+        row_names_side = "left",
+        row_names_gp = gpar(fontsize = 8),
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        show_column_names = TRUE,
+        show_row_names = TRUE,
+        column_title = "Columns",
+        row_title = "Row Names",
+        heatmap_legend_param = list(title = "Legend")
+)
+dev.off()
+
+
+######################
+metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
+metadata$new_column <- NULL
+metadata$batch <- NULL
+
+# Remove 'names' column as it will be used as row labels
+row_names <- metadata$names
+metadata <- metadata[, -1]
+
+# Convert non-numeric columns to factors
+metadata[, c("EndometriosisStatus", "lane","endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
+
+# Convert remaining columns to a matrix
+mat <- data.matrix(metadata)
+
+# Create heatmap
+pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap2.pdf"), width = 7, height = 9)
+heatmap.2(mat,
+          Rowv=FALSE, Colv=FALSE,
+          dendrogram="none",
+          trace="none",
+          col = heat.colors(256),
+          margins=c(8,10),
+          labRow=row_names,
+          scale="column",
+          key=TRUE,
+          keysize=1.5,
+          key.title="Color Key",
+          key.xlab="Value",
+          key.ylab=NULL,
+          density.info="none",
+          main="Heatmap of Metadata")
+dev.off()
+
+```
 
 
 ##################################################################################################################
-Scailyte part
+Scailyte part, extra code to delete
+
 #Supplementary Data Figure 6a, b
 ```{r barplot distribution of cv splits, all cells, prolif}
 meta <- read.csv("/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv")
@@ -1458,75 +1569,6 @@ p2 <- DimPlot(data, reduction = "umap", cells.highlight = control_true_cells, co
 
 ```
 
-Supplementary Data Figure 6c
-```{r}
-
-metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
-metadata$new_column <- NULL
-metadata$batch <- NULL
-
-
-# Remove 'names' column as it will be used as row labels
-row_names <- metadata$names
-metadata <- metadata[, -1]
-
-# Convert non-numeric columns to factors
-metadata[, c("EndometriosisStatus", "lane",  "endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
-
-
-
-# Create heatmap using ComplexHeatmap
-pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap.pdf"), width = 7, height = 9)
-Heatmap(metadata,
-        name = "Metadata",
-        row_names_side = "left",
-        row_names_gp = gpar(fontsize = 8),
-        cluster_rows = FALSE,
-        cluster_columns = FALSE,
-        show_column_names = TRUE,
-        show_row_names = TRUE,
-        column_title = "Columns",
-        row_title = "Row Names",
-        heatmap_legend_param = list(title = "Legend")
-)
-dev.off()
-
-
-######################
-metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
-metadata$new_column <- NULL
-metadata$batch <- NULL
-
-# Remove 'names' column as it will be used as row labels
-row_names <- metadata$names
-metadata <- metadata[, -1]
-
-# Convert non-numeric columns to factors
-metadata[, c("EndometriosisStatus", "lane","endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
-
-# Convert remaining columns to a matrix
-mat <- data.matrix(metadata)
-
-# Create heatmap
-pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap2.pdf"), width = 7, height = 9)
-heatmap.2(mat,
-          Rowv=FALSE, Colv=FALSE,
-          dendrogram="none",
-          trace="none",
-          col = heat.colors(256),
-          margins=c(8,10),
-          labRow=row_names,
-          scale="column",
-          key=TRUE,
-          keysize=1.5,
-          key.title="Color Key",
-          key.xlab="Value",
-          key.ylab=NULL,
-          density.info="none",
-          main="Heatmap of Metadata")
-dev.off()
-
-```
 
 make DEG table for paper
 ```{r}
