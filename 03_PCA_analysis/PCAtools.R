@@ -9,7 +9,7 @@ library(Seurat)
 
 
 ##Set paths
-dir_ENDO <- "/home/duempelmann/analysis-projects/ENDO/E044/A085/endometriosis_endometrium_scRNA_atlas/"
+dir_ENDO <- "/endometriosis_endometrium_scRNA_atlas/"
 dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
 dir.create(dir_out, recursive = TRUE)
 

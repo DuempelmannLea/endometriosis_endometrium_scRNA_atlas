@@ -14,16 +14,14 @@ library(dplyr)
 library(ggplot2)
 
 ##Set paths
-workPath <- "/ENDO"
-analysisFolder <- paste0(workPath, "/ENDO/monocle3")
-out <- "epithelial"
-rawData <- paste0(workPath, "/raw_data/epithelial.rds")
+analysisFolder <- "endometriosis_endometrium_scRNA_atlas/_Data/04_Time_trajectory_analysis/"
+rawData <- "/endometriosis_endometrium_scRNA_atlas/_Data/01_Atlas_generation/Integration_epithelial_only/EndoAtlas_epithelial.rds"
 metadataFile <- ""
 subsetClusters <- c()  
 #-------------
 
 #Load data
-dir.create(paste0(analysisFolder, "/", out))
+dir.create(analysisFolder)
 
 data <- readRDS(rawData)
 

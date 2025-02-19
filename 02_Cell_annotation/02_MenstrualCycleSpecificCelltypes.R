@@ -13,7 +13,7 @@ library(ComplexUpset)
 library(ggrepel)
 library(PCAtools)
 library(scCustomize)
-dir_out <- "ENDO/E044/A074/"
+dir_out <- "/endometriosis_endometrium_scRNA_atlas/_Data/02_Cell_annotation/"
 dir.create(dir_out, recursive = TRUE)
 setwd(dir_out)
 
@@ -21,7 +21,7 @@ setwd(dir_out)
 #### 01. Load data and plot
 #######################
 ###Load data
-data <- readRDS("./ENDOatlas.rds")
+data <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/01_Atlas_generation/Integration/ENDOatlas.rds")
 
 ###Plotting for overview
 DimPlot_scCustom(data, reduction = "umap", group.by = "MenstrualCyclePhase")
@@ -175,7 +175,7 @@ table(meta_final$Symphony_Refined_Final) #sanity check
 #### 04. Menstrual cycle specific epithelial cells
 #######################
 ###Look into difference between glandular (proliferative), (glandular) mid-secretory, glandular early-secretory
-data <- readRDS("./epithelial_reintegrated.rds")
+data <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/01_Atlas_generation/Integration_epithelial_only/epithelial_reintegrated.rds")
 data <- AddMetaData(data, meta_final)
 DimPlot(data, split.by = "MenstrualCyclePhase", group.by = "Symphony_Refined_Final")
 #there are quite some glandular early-secretory already in proliferative/periovulatory phase and a lot in secretory_early. lumenal 2 are mainly in lumenal 2. mid-secretory are in secretory_mid/late, this matches

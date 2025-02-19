@@ -37,7 +37,7 @@ symphony <- function(CELLTYPEref,
   ######################################################## 
   
   #create directory
-  dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A047/prolif_sec_",CELLTYPEref,"ref_",CELLTYPEquery,"query","/")
+  dir_out <- paste0("/endometriosis_endometrium_scRNA_atlas/_Data/02_Cell_annotation/",CELLTYPEref,"ref_",CELLTYPEquery,"query","/")
   dir.create(dir_out, recursive = TRUE)
   setwd(dir_out)
   
@@ -46,7 +46,7 @@ symphony <- function(CELLTYPEref,
   ########################################################
   
   #Load ref data set
-  cells_ref <- readRDS(paste0("/home/common/data/output/projects/ENDO/E039/A001/",CELLTYPEref,".rds"))
+  cells_ref <- readRDS(paste0("/endometriosis_endometrium_scRNA_atlas/_Data/02_Cell_annotation/",CELLTYPEref,".rds"))
   cells_ref@meta.data$dataset <- "ref"
   cells_ref <- NormalizeData(cells_ref, normalization.method = "LogNormalize", scale.factor = 10000, assay = "RNA")
   ref_exp_full <- cells_ref@assays$RNA@data
@@ -56,7 +56,7 @@ symphony <- function(CELLTYPEref,
   ref_metadata <- setnames(ref_metadata, old = c("subtypes", "phase"), new = c("cell_type", "batch"))
   
   #Load query data set
-  cells_query <- readRDS(paste0(dir_out,"/prolif_sec_",CELLTYPEquery,".rds"))
+  cells_query <- readRDS(paste0(dir_out,"/EndoAtlas_",CELLTYPEquery,".rds"))
   DefaultAssay(cells_query) <- "RNA"
   cells_query <- DietSeurat(cells_query, assay="RNA", dimreducs = "umap")
   cells_query@meta.data$dataset <- "query"
