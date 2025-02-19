@@ -1243,41 +1243,6 @@ Heatmap(metadata,
 )
 dev.off()
 
-
-######################
-metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
-metadata$new_column <- NULL
-metadata$batch <- NULL
-
-# Remove 'names' column as it will be used as row labels
-row_names <- metadata$names
-metadata <- metadata[, -1]
-
-# Convert non-numeric columns to factors
-metadata[, c("EndometriosisStatus", "lane","endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
-
-# Convert remaining columns to a matrix
-mat <- data.matrix(metadata)
-
-# Create heatmap
-pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap2.pdf"), width = 7, height = 9)
-heatmap.2(mat,
-          Rowv=FALSE, Colv=FALSE,
-          dendrogram="none",
-          trace="none",
-          col = heat.colors(256),
-          margins=c(8,10),
-          labRow=row_names,
-          scale="column",
-          key=TRUE,
-          keysize=1.5,
-          key.title="Color Key",
-          key.xlab="Value",
-          key.ylab=NULL,
-          density.info="none",
-          main="Heatmap of Metadata")
-dev.off()
-
 ```
 
 
