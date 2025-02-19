@@ -1299,39 +1299,6 @@ upset(df,
 dev.off()
 
 
-
-
-
-################?/???????
-#heatmap, not working yet
-
-# Extracting the necessary columns from the 'meta' dataframe
-data_matrix <- meta[, c("fold1", "fold2", "fold3", "fold4", "fold5")]
-data_matrix_numeric <- apply(data_matrix, 2, function(x) as.numeric(x == "eval"))
-
-# Adding annotation columns
-annotation_data <- meta[, c("EndometriosisStatus", "lane", "batch", "endo_EndometriosisGrade")]
-
-library(ComplexHeatmap)
-library(circlize)
-
-# Define a custom color palette
-my_color_palette <- colorRamp2(c(0, 0.5, 1), c("blue", "white", "red"))
-png(file=paste0(dir_out,'heatmap.pdf'))
-# Create the heatmap using ComplexHeatmap
-heatmap <- Heatmap(
-  data_matrix_numeric,
-  col = my_color_palette,
-  row_dend_reorder = TRUE,  # Adjust this based on your preference
-  column_title = "Folds",
-  name = "Fold Value",
-  show_row_names = FALSE,
-  show_column_names = TRUE,
-  cluster_columns = FALSE
-)
-
-draw(heatmap)
-dev.off()
 ```
 
 ```{r Plot DEGs from Tan proliferative, vulcano and DotPlot}
