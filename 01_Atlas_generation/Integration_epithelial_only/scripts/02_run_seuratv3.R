@@ -101,7 +101,7 @@ integrated_data <- rpca_integration(seurat_obj_split_input, snakemake, features_
 DefaultAssay(integrated_data) <- "integrated"
 
 
-seed <- 122334
+seed <- 621
 
 # Perform linear dimensional reduction by PCA on HVGs
 integrated_data <- RunPCA(object = integrated_data,
