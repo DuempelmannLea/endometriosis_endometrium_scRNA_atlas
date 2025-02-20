@@ -1,0 +1,451 @@
+learner_uid,dimred,auc
+CVsplit3_corrgpca_learner20,corrGPCA,1
+CVsplit3_corrgpca_learner26,corrGPCA,1
+CVsplit3_corrgpca_learner48,corrGPCA,1
+CVsplit3_corrgpca_learner01,corrGPCA,1
+CVsplit3_corrgpca_learner43,corrGPCA,1
+CVsplit3_corrgpca_learner06,corrGPCA,1
+CVsplit3_corrgpca_learner25,corrGPCA,1
+CVsplit3_corrgpca_learner46,corrGPCA,1
+CVsplit3_corrgpca_learner02,corrGPCA,1
+CVsplit3_corrgpca_learner19,corrGPCA,1
+CVsplit3_corrgpca_learner10,corrGPCA,1
+CVsplit3_corrgpca_learner29,corrGPCA,1
+CVsplit3_corrgpca_learner42,corrGPCA,1
+CVsplit3_corrgpca_learner40,corrGPCA,1
+CVsplit3_corrgpca_learner09,corrGPCA,1
+CVsplit3_corrgpca_learner15,corrGPCA,1
+CVsplit3_corrgpca_learner28,corrGPCA,1
+CVsplit3_corrgpca_learner27,corrGPCA,1
+CVsplit3_corrgpca_learner34,corrGPCA,1
+CVsplit3_corrgpca_learner38,corrGPCA,1
+CVsplit3_corrgpca_learner35,corrGPCA,1
+CVsplit3_corrgpca_learner14,corrGPCA,1
+CVsplit3_corrgpca_learner32,corrGPCA,1
+CVsplit3_corrgpca_learner24,corrGPCA,1
+CVsplit3_corrgpca_learner44,corrGPCA,1
+CVsplit3_corrgpca_learner22,corrGPCA,1
+CVsplit3_corrgpca_learner05,corrGPCA,1
+CVsplit3_corrgpca_learner11,corrGPCA,1
+CVsplit3_corrgpca_learner07,corrGPCA,1
+CVsplit3_corrgpca_learner33,corrGPCA,1
+CVsplit3_corrgpca_learner36,corrGPCA,1
+CVsplit3_corrgpca_learner39,corrGPCA,1
+CVsplit3_corrgpca_learner30,corrGPCA,1
+CVsplit3_corrgpca_learner16,corrGPCA,1
+CVsplit3_corrgpca_learner21,corrGPCA,1
+CVsplit3_corrgpca_learner47,corrGPCA,1
+CVsplit3_corrgpca_learner18,corrGPCA,1
+CVsplit3_corrgpca_learner37,corrGPCA,1
+CVsplit3_corrgpca_learner41,corrGPCA,1
+CVsplit2_corrgpca_learner30,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_learner03,corrGPCA,1
+CVsplit3_corrgpca_learner08,corrGPCA,1
+CVsplit3_corrgpca_learner49,corrGPCA,1
+CVsplit3_corrgpca_learner13,corrGPCA,1
+CVsplit3_corrgpca_learner04,corrGPCA,1
+CVsplit3_corrgpca_learner17,corrGPCA,1
+CVsplit3_corrgpca_learner31,corrGPCA,1
+CVsplit3_corrgpca_pca_learner14,corrGPCA + PCA,1
+CVsplit3_corrgpca_learner23,corrGPCA,1
+CVsplit3_corrgpca_learner12,corrGPCA,1
+CVsplit3_corrgpca_learner50,corrGPCA,1
+CVsplit3_corrgpca_learner45,corrGPCA,1
+CVsplit3_pca_learner17,PCA,1
+CVsplit1_corrgpca_learner16,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner22,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner30,PCA,0.916666666666667
+CVsplit2_corrgpca_learner38,corrGPCA,0.666666666666667
+CVsplit3_corrgpca_pca_learner02,corrGPCA + PCA,0.833333333333333
+CVsplit3_pca_learner35,PCA,0.833333333333333
+CVsplit3_pca_learner44,PCA,0.916666666666667
+CVsplit1_corrgpca_learner42,corrGPCA,0.75
+CVsplit3_pca_learner37,PCA,1
+CVsplit1_corrgpca_learner43,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner15,corrGPCA + PCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner38,corrGPCA + PCA,0.833333333333333
+CVsplit3_pca_learner43,PCA,0.833333333333333
+CVsplit3_pca_learner31,PCA,1
+CVsplit3_pca_learner46,PCA,0.833333333333333
+CVsplit2_corrgpca_learner16,corrGPCA,0.75
+CVsplit1_corrgpca_learner04,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner27,corrGPCA,0.916666666666667
+CVsplit2_corrgpca_learner02,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner27,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner11,PCA,0.916666666666667
+CVsplit3_pca_learner28,PCA,0.833333333333333
+CVsplit3_pca_learner45,PCA,1
+CVsplit3_corrgpca_pca_learner40,corrGPCA + PCA,1
+CVsplit3_pca_learner21,PCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner17,corrGPCA + PCA,1
+CVsplit2_corrgpca_learner05,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner09,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_learner30,corrGPCA,0.75
+CVsplit3_pca_learner29,PCA,0.916666666666667
+CVsplit1_corrgpca_learner14,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner38,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner04,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner06,corrGPCA,1
+CVsplit3_pca_learner50,PCA,0.916666666666667
+CVsplit1_corrgpca_learner02,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner01,corrGPCA,0.916666666666667
+CVsplit3_pca_learner25,PCA,0.833333333333333
+CVsplit2_corrgpca_learner47,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner20,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner20,corrGPCA + PCA,1
+CVsplit3_corrgpca_pca_learner11,corrGPCA + PCA,1
+CVsplit3_corrgpca_pca_learner07,corrGPCA + PCA,1
+CVsplit3_pca_learner24,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner28,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner15,corrGPCA,0.75
+CVsplit2_corrgpca_learner36,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner29,corrGPCA + PCA,1
+CVsplit1_corrgpca_learner17,corrGPCA,0.833333333333333
+CVsplit3_pca_learner04,PCA,0.833333333333333
+CVsplit3_pca_learner20,PCA,0.75
+CVsplit3_pca_learner12,PCA,0.916666666666667
+CVsplit2_corrgpca_learner35,corrGPCA,0.75
+CVsplit3_pca_learner40,PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner38,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_learner19,corrGPCA,0.75
+CVsplit2_corrgpca_learner42,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner25,corrGPCA + PCA,1
+CVsplit2_corrgpca_learner09,corrGPCA,0.75
+CVsplit3_pca_learner34,PCA,0.833333333333333
+CVsplit3_pca_learner23,PCA,0.916666666666667
+CVsplit1_corrgpca_pca_learner17,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner39,corrGPCA,0.75
+CVsplit1_corrgpca_learner36,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner34,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner33,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner37,corrGPCA,0.833333333333333
+CVsplit3_pca_learner07,PCA,0.833333333333333
+CVsplit1_corrgpca_learner31,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner04,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner44,corrGPCA,0.75
+CVsplit2_corrgpca_learner21,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner19,corrGPCA,0.833333333333333
+CVsplit3_pca_learner10,PCA,0.75
+CVsplit1_corrgpca_learner05,corrGPCA,0.75
+CVsplit3_pca_learner32,PCA,0.833333333333333
+CVsplit1_corrgpca_learner47,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner37,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner41,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner47,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_learner18,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner37,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner27,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner35,corrGPCA + PCA,1
+CVsplit2_corrgpca_learner22,corrGPCA,0.75
+CVsplit2_corrgpca_learner08,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner12,corrGPCA + PCA,1
+CVsplit2_corrgpca_learner14,corrGPCA,0.666666666666667
+CVsplit3_corrgpca_pca_learner24,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner22,corrGPCA,0.75
+CVsplit1_pca_learner42,PCA,0.75
+CVsplit3_pca_learner13,PCA,0.833333333333333
+CVsplit1_corrgpca_learner26,corrGPCA,0.916666666666667
+CVsplit2_corrgpca_learner04,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner10,corrGPCA,0.666666666666667
+CVsplit1_corrgpca_learner03,corrGPCA,0.916666666666667
+CVsplit1_corrgpca_learner48,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner16,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_learner26,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner46,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner19,PCA,0.75
+CVsplit2_corrgpca_learner33,corrGPCA,0.666666666666667
+CVsplit3_corrgpca_pca_learner45,corrGPCA + PCA,1
+CVsplit3_pca_learner03,PCA,0.833333333333333
+CVsplit2_corrgpca_learner03,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner31,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner23,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner15,corrGPCA,0.666666666666667
+CVsplit1_corrgpca_learner09,corrGPCA,0.75
+CVsplit1_pca_learner37,PCA,0.833333333333333
+CVsplit3_pca_learner01,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner50,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner49,PCA,0.833333333333333
+CVsplit1_pca_learner27,PCA,0.833333333333333
+CVsplit1_pca_learner50,PCA,0.833333333333333
+CVsplit1_pca_learner46,PCA,0.75
+CVsplit2_corrgpca_learner29,corrGPCA,0.666666666666667
+CVsplit3_pca_learner26,PCA,0.833333333333333
+CVsplit3_pca_learner48,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner10,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner21,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner40,corrGPCA,0.833333333333333
+CVsplit1_pca_learner09,PCA,0.75
+CVsplit3_pca_learner08,PCA,0.833333333333333
+CVsplit3_pca_learner16,PCA,0.916666666666667
+CVsplit1_corrgpca_learner44,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner44,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner39,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner43,corrGPCA + PCA,0.916666666666667
+CVsplit1_pca_learner30,PCA,0.75
+CVsplit3_pca_learner18,PCA,0.833333333333333
+CVsplit1_pca_learner17,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner32,corrGPCA + PCA,0.833333333333333
+CVsplit3_pca_learner42,PCA,0.916666666666667
+CVsplit1_pca_learner04,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner23,corrGPCA + PCA,0.916666666666667
+CVsplit3_pca_learner05,PCA,0.75
+CVsplit1_corrgpca_learner12,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner49,corrGPCA,0.916666666666667
+CVsplit2_corrgpca_learner43,corrGPCA,0.833333333333333
+CVsplit1_pca_learner12,PCA,0.833333333333333
+CVsplit2_corrgpca_learner48,corrGPCA,0.833333333333333
+CVsplit3_pca_learner06,PCA,0.75
+CVsplit1_corrgpca_learner28,corrGPCA,0.833333333333333
+CVsplit1_pca_learner14,PCA,0.833333333333333
+CVsplit1_pca_learner29,PCA,0.75
+CVsplit1_pca_learner45,PCA,0.916666666666667
+CVsplit1_corrgpca_learner21,corrGPCA,0.833333333333333
+CVsplit1_pca_learner28,PCA,0.75
+CVsplit3_pca_learner15,PCA,0.916666666666667
+CVsplit1_corrgpca_learner18,corrGPCA,0.916666666666667
+CVsplit3_pca_learner39,PCA,0.75
+CVsplit1_pca_learner16,PCA,0.75
+CVsplit1_pca_learner43,PCA,0.75
+CVsplit2_corrgpca_learner41,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner30,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_learner50,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner29,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner07,corrGPCA,0.666666666666667
+CVsplit1_pca_learner02,PCA,0.833333333333333
+CVsplit1_pca_learner35,PCA,0.75
+CVsplit2_pca_learner02,PCA,0.75
+CVsplit3_pca_learner33,PCA,0.833333333333333
+CVsplit1_corrgpca_learner32,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner03,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner39,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_learner35,corrGPCA,0.833333333333333
+CVsplit1_pca_learner33,PCA,0.916666666666667
+CVsplit2_corrgpca_learner01,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner04,corrGPCA + PCA,0.833333333333333
+CVsplit1_pca_learner15,PCA,0.75
+CVsplit3_pca_learner36,PCA,0.75
+CVsplit3_corrgpca_pca_learner42,corrGPCA + PCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner06,corrGPCA + PCA,0.833333333333333
+CVsplit1_pca_learner44,PCA,0.75
+CVsplit3_corrgpca_pca_learner41,corrGPCA + PCA,0.833333333333333
+CVsplit3_pca_learner22,PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner36,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_learner41,corrGPCA,0.916666666666667
+CVsplit3_pca_learner02,PCA,0.916666666666667
+CVsplit1_corrgpca_learner46,corrGPCA,0.75
+CVsplit1_corrgpca_learner25,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner13,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner05,corrGPCA + PCA,0.833333333333333
+CVsplit3_pca_learner47,PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner37,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner27,PCA,0.583333333333333
+CVsplit1_pca_learner11,PCA,0.833333333333333
+CVsplit1_corrgpca_learner11,corrGPCA,0.916666666666667
+CVsplit3_corrgpca_pca_learner08,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner49,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner16,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner40,corrGPCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner48,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner23,corrGPCA + PCA,0.916666666666667
+CVsplit2_pca_learner14,PCA,0.583333333333333
+CVsplit1_corrgpca_learner24,corrGPCA,0.916666666666667
+CVsplit2_corrgpca_learner13,corrGPCA,0.833333333333333
+CVsplit1_corrgpca_learner49,corrGPCA,0.916666666666667
+CVsplit1_corrgpca_learner08,corrGPCA,0.916666666666667
+CVsplit2_corrgpca_learner24,corrGPCA,0.916666666666667
+CVsplit1_pca_learner22,PCA,0.666666666666667
+CVsplit2_pca_learner09,PCA,0.666666666666667
+CVsplit1_pca_learner20,PCA,0.75
+CVsplit2_pca_learner47,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner12,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner28,corrGPCA,0.75
+CVsplit1_corrgpca_pca_learner45,corrGPCA + PCA,0.916666666666667
+CVsplit1_pca_learner07,PCA,0.75
+CVsplit3_corrgpca_pca_learner26,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_learner13,corrGPCA,0.833333333333333
+CVsplit3_pca_learner14,PCA,0.833333333333333
+CVsplit2_pca_learner30,PCA,0.666666666666667
+CVsplit3_pca_learner38,PCA,0.833333333333333
+CVsplit2_pca_learner33,PCA,0.666666666666667
+CVsplit3_pca_learner27,PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner16,corrGPCA + PCA,0.75
+CVsplit2_pca_learner38,PCA,0.666666666666667
+CVsplit3_corrgpca_pca_learner18,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_learner17,corrGPCA,0.583333333333333
+CVsplit2_corrgpca_learner46,corrGPCA,0.75
+CVsplit2_corrgpca_learner25,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner17,corrGPCA + PCA,0.75
+CVsplit2_pca_learner16,PCA,0.583333333333333
+CVsplit2_corrgpca_learner32,corrGPCA,0.75
+CVsplit3_corrgpca_pca_learner19,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner33,corrGPCA + PCA,0.833333333333333
+CVsplit3_corrgpca_pca_learner01,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner37,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner31,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_learner31,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner23,corrGPCA,0.75
+CVsplit2_corrgpca_learner20,corrGPCA,0.833333333333333
+CVsplit2_pca_learner17,PCA,0.75
+CVsplit1_corrgpca_learner10,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner34,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner50,corrGPCA,0.666666666666667
+CVsplit1_pca_learner31,PCA,0.833333333333333
+CVsplit3_pca_learner09,PCA,0.833333333333333
+CVsplit2_pca_learner42,PCA,0.583333333333333
+CVsplit1_corrgpca_learner07,corrGPCA,0.833333333333333
+CVsplit2_corrgpca_learner11,corrGPCA,0.75
+CVsplit2_pca_learner15,PCA,0.583333333333333
+CVsplit2_pca_learner05,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner02,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner24,corrGPCA + PCA,0.916666666666667
+CVsplit2_corrgpca_pca_learner12,corrGPCA + PCA,0.833333333333333
+CVsplit1_pca_learner47,PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner33,corrGPCA + PCA,0.5
+CVsplit2_corrgpca_learner12,corrGPCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner50,corrGPCA + PCA,0.916666666666667
+CVsplit1_pca_learner18,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner06,corrGPCA + PCA,0.75
+CVsplit1_pca_learner38,PCA,0.75
+CVsplit2_corrgpca_pca_learner30,corrGPCA + PCA,0.666666666666667
+CVsplit2_pca_learner01,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner10,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_learner45,corrGPCA,0.833333333333333
+CVsplit1_pca_learner40,PCA,0.75
+CVsplit2_pca_learner36,PCA,0.583333333333333
+CVsplit2_pca_learner41,PCA,0.75
+CVsplit2_pca_learner26,PCA,0.666666666666667
+CVsplit1_corrgpca_learner34,corrGPCA,0.75
+CVsplit2_pca_learner23,PCA,0.666666666666667
+CVsplit2_pca_learner22,PCA,0.75
+CVsplit2_pca_learner18,PCA,0.75
+CVsplit2_corrgpca_pca_learner23,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner04,PCA,0.583333333333333
+CVsplit2_pca_learner12,PCA,0.666666666666667
+CVsplit2_pca_learner03,PCA,0.666666666666667
+CVsplit2_pca_learner08,PCA,0.75
+CVsplit1_corrgpca_pca_learner22,corrGPCA + PCA,0.916666666666667
+CVsplit1_corrgpca_pca_learner47,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_learner45,corrGPCA,0.75
+CVsplit1_pca_learner23,PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner27,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner07,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner27,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner07,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner37,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner19,corrGPCA + PCA,0.666666666666667
+CVsplit2_pca_learner48,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner15,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner31,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner33,corrGPCA + PCA,0.833333333333333
+CVsplit1_pca_learner10,PCA,0.833333333333333
+CVsplit1_corrgpca_learner06,corrGPCA,0.75
+CVsplit1_corrgpca_pca_learner36,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner05,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner30,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner42,corrGPCA + PCA,0.75
+CVsplit1_pca_learner25,PCA,0.75
+CVsplit1_pca_learner05,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner50,corrGPCA + PCA,0.75
+CVsplit2_pca_learner19,PCA,0.583333333333333
+CVsplit1_pca_learner24,PCA,0.75
+CVsplit1_pca_learner39,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner05,corrGPCA + PCA,0.5
+CVsplit2_corrgpca_pca_learner47,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner09,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner32,PCA,0.75
+CVsplit1_pca_learner21,PCA,0.75
+CVsplit1_corrgpca_pca_learner39,corrGPCA + PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner45,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner42,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner38,corrGPCA + PCA,0.5
+CVsplit2_corrgpca_pca_learner43,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner46,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner19,corrGPCA + PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner39,corrGPCA + PCA,0.5
+CVsplit2_pca_learner50,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner21,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner49,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner29,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner36,corrGPCA + PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner11,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner44,corrGPCA + PCA,0.833333333333333
+CVsplit2_pca_learner13,PCA,0.75
+CVsplit1_pca_learner01,PCA,0.666666666666667
+CVsplit1_pca_learner34,PCA,0.75
+CVsplit2_corrgpca_pca_learner09,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner46,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner35,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner10,corrGPCA + PCA,0.833333333333333
+CVsplit2_corrgpca_pca_learner24,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner28,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner11,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner34,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner06,corrGPCA + PCA,0.5
+CVsplit1_pca_learner26,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner44,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner34,corrGPCA + PCA,0.833333333333333
+CVsplit1_pca_learner48,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner29,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner28,corrGPCA + PCA,0.833333333333333
+CVsplit1_corrgpca_pca_learner25,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner01,corrGPCA + PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner35,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner08,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner02,corrGPCA + PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner18,corrGPCA + PCA,0.583333333333333
+CVsplit1_corrgpca_pca_learner18,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner20,corrGPCA + PCA,0.75
+CVsplit2_pca_learner24,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner48,corrGPCA + PCA,0.583333333333333
+CVsplit1_corrgpca_pca_learner48,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner26,corrGPCA + PCA,0.666666666666667
+CVsplit2_pca_learner45,PCA,0.75
+CVsplit1_corrgpca_pca_learner13,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner03,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner43,corrGPCA + PCA,0.75
+CVsplit1_pca_learner08,PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner20,corrGPCA + PCA,0.75
+CVsplit2_pca_learner25,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner40,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner01,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner32,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner25,corrGPCA + PCA,0.75
+CVsplit1_corrgpca_pca_learner14,corrGPCA + PCA,0.75
+CVsplit2_pca_learner40,PCA,0.583333333333333
+CVsplit1_corrgpca_pca_learner21,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner13,corrGPCA + PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner22,corrGPCA + PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner08,corrGPCA + PCA,0.75
+CVsplit2_corrgpca_pca_learner40,corrGPCA + PCA,0.666666666666667
+CVsplit2_corrgpca_pca_learner03,corrGPCA + PCA,0.583333333333333
+CVsplit1_pca_learner36,PCA,0.666666666666667
+CVsplit1_pca_learner32,PCA,0.75
+CVsplit1_corrgpca_pca_learner41,corrGPCA + PCA,0.75
+CVsplit1_pca_learner19,PCA,0.666666666666667
+CVsplit1_corrgpca_pca_learner49,corrGPCA + PCA,0.75
+CVsplit2_pca_learner31,PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner41,corrGPCA + PCA,0.666666666666667
+CVsplit2_pca_learner46,PCA,0.5
+CVsplit2_pca_learner21,PCA,0.583333333333333
+CVsplit1_pca_learner06,PCA,0.75
+CVsplit2_pca_learner35,PCA,0.583333333333333
+CVsplit1_pca_learner03,PCA,0.666666666666667
+CVsplit1_pca_learner13,PCA,0.666666666666667
+CVsplit2_pca_learner07,PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner14,corrGPCA + PCA,0.5
+CVsplit2_corrgpca_pca_learner49,corrGPCA + PCA,0.583333333333333
+CVsplit2_pca_learner28,PCA,0.583333333333333
+CVsplit1_pca_learner49,PCA,0.75
+CVsplit2_pca_learner29,PCA,0.583333333333333
+CVsplit2_pca_learner43,PCA,0.583333333333333
+CVsplit2_pca_learner34,PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner26,corrGPCA + PCA,0.583333333333333
+CVsplit1_pca_learner41,PCA,0.666666666666667
+CVsplit2_pca_learner10,PCA,0.583333333333333
+CVsplit2_pca_learner11,PCA,0.666666666666667
+CVsplit2_pca_learner44,PCA,0.583333333333333
+CVsplit2_pca_learner39,PCA,0.583333333333333
+CVsplit2_pca_learner20,PCA,0.5
+CVsplit2_corrgpca_pca_learner32,corrGPCA + PCA,0.583333333333333
+CVsplit2_pca_learner06,PCA,0.583333333333333
+CVsplit2_corrgpca_pca_learner15,corrGPCA + PCA,0.5
