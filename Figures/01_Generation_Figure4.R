@@ -80,8 +80,28 @@ go_enrichment_plot(go_results_all_cells)
 ##  Figure 4.e
 ## ---------------------------------- ##
 
-## predictive cells enrichment 
+df <- read.csv(file = file.path(input_path,'cell_ranking_figure4e.csv'))
 
+# define the order in which the x axis variable are displayed on the plot
+df$Symphony_Refined <- factor(df$Symphony_Refined,
+                                                 levels = c('overall','VSMC',
+                                                            'Prv-CCL19','Prv-MYH11','Prv-STEAP4',
+                                                            'ciliated',
+                                                            "M$\\Phi$1-LYVE1","M$\\Phi$3-APOE","M$\\Phi$5-activated"))
+
+# Create a stacked bar plot for the filtered data, showing percentage of TRUE and FALSE for 'median_rank_control_logic01'
+Fig4e <- ggplot(df, aes(x = Symphony_Refined, 
+                                           y = percentage, 
+                                           fill = as.factor(median_rank_control_logic01))) +
+  geom_bar(stat = "identity", position = "fill") +  # Stack the bars to show proportions
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) +  # Format y-axis as percentages
+  scale_fill_manual(values=c("TRUE"='navyblue',"FALSE"='grey'),
+                    labels = c('TRUE'='top 90%','FALSE'='lower 10%')) +
+  geom_hline(yintercept = 0.1,linewidth = 1.5)+
+  theme_minimal() +  # Use minimal theme
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  # Rotate x-axis labels for readability
+  labs(x = "", y = "", fill = "Median cell rank")  # Label the plot
+Fig4e
 
 ## ---------------------------------- ##
 ##  Figure 4.f
