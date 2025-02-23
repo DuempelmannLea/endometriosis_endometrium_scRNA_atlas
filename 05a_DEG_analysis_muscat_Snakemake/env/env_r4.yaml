@@ -1,0 +1,11 @@
+name: scairap-pseudobulk
+channels:
+- conda
+- conda-forge
+- default
+- bioconda
+dependencies:
+- r-base = 4.2
+- r-dplyr
+- r-seurat = 4.1.1
+- bioconductor-muscat = 1.12.0
