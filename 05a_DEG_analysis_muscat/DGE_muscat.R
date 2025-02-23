@@ -4,11 +4,11 @@
 
 # load packages
 suppressPackageStartupMessages({
-  source('/endometriosis_endometrium_scRNA_atlas/02_Cell_annotation/01_libs.R')# imports
+  source('/endometriosis_endometrium_scRNA_atlas/05a_DEG_analysis_muscat/01_libs.R')# imports
 }) 
 
 #source utils
-source('/endometriosis_endometrium_scRNA_atlas/02_Cell_annotation/01_utils.R') # color definitions, symphony function and plotting functions
+source('/endometriosis_endometrium_scRNA_atlas/05a_DEG_analysis_muscat/01_utils.R') # color definitions, symphony function and plotting functions
 
 
 
