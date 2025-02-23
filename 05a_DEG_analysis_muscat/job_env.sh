@@ -1,0 +1,2 @@
+NAMESPACE=endo
+PIPELINE=endo

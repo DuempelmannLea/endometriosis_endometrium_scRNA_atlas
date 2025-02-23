@@ -1,0 +1,24 @@
+#Snakemake for R script of DGE mm analyses in muscat, analyses on raw and corrected counts
+## Run all analyses
+configfile: "/endometriosis_endometrium_scRNA_atlas/05a_DEG_analysis_muscat/config.yaml"
+
+rule all:
+    input:
+        expand("/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/data/results/degs_mm_sct_{cell_population}.csv", cell_population = config["cell_populations"]),
+        "/home/common/data/output/projects/ENDO/E044/A030/major_celltypes_Tan/data/results/degs_mm_raw.csv"
+## rules
+rule run_muscat_mm:
+    input:
+        "/home/common/data/output/projects/ENDO/E044/A015/integration/prolif_sec_SCT_percent.mt_sample_global_integration_batch_hvg.RDS"
+    output:
+        "/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/res_mm_dream.rds"
+    conda:
+        "env/env_r4.yaml"
+    log:
+        log_file = "/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/mm_log.log",
+        log_object = "/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/mm_log.RData"
+    params:
+        threads = config["n_cores"],
+    script:
+        "scripts/DGE_muscat.R"
+

@@ -1,0 +1,13 @@
+name: distinct
+channels:
+- conda
+- conda-forge
+- default
+- bioconda
+dependencies:
+- r-base = 4.2
+- r-dplyr
+- r-seurat
+- bioconductor-muscat
+- bioconductor-summarizedexperiment
+- bioconductor-distinct
