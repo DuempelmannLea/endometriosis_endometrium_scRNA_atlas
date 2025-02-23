@@ -1,0 +1,12 @@
+signature,sample_id,median_output_probability,grade
+corrgpca,sample106,0.739994855,mild
+corrgpca,sample108,0.839709535,mild
+corrgpca,sample112,0.004674868,CTL
+corrgpca,sample115,0.33253956,CTL
+corrgpca,sample123,0.63740546,CTL
+corrgpca,sample126,0.74021333,severe
+corrgpca,sample135,0.65904212,severe
+corrgpca,sample81,0.29044702,CTL
+corrgpca,sample84,0.90189797,severe
+corrgpca,sample95,0.830087095,CTL
+corrgpca,sample96,0.59604937,CTL
