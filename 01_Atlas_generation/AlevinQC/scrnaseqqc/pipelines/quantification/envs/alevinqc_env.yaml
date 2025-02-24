@@ -1,0 +1,10 @@
+name: scairap-quantification
+channels:
+- bioconda
+- conda
+- conda-forge
+- default
+dependencies:
+- r = 4
+- bioconductor-alevinQC = 1.6.0
+- pandoc = 2.11.4

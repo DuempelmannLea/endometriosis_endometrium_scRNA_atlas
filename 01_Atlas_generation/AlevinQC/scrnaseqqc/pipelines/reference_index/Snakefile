@@ -1,0 +1,87 @@
+## ------------------------------------------------------------------------------------ ##
+## Reference index preparation
+## ------------------------------------------------------------------------------------ ##
+# prepare metadata files for salmon
+rule salmon_decoys:
+	input:
+		genome = config["genome"]
+	output:
+		decoys = dir_out["intermediate_output"] + "salmon/salmon_decoys/decoys.txt"
+	log:
+		dir_out["logs"] + "salmon_decoys/salmon_decoys.log"
+	conda:
+		"envs/salmon_env.yaml"
+	shell:
+	  """
+	  grep "^>" <(gunzip -c {input.genome}) | cut -d " " -f 1 > {output.decoys}
+	  sed -i.bak -e 's/>//g' {output.decoys} 2>&1
+    """
+
+rule salmon_gentrome:
+	input:
+		txome = config["txome"],
+		genome = config["genome"]
+	output:
+		gentrome = dir_out["intermediate_output"] + "salmon/salmon_gentrome/gentrome.fa.gz"
+	log:
+		dir_out["logs"] + "salmon_gentrome/salmon_gentrome.log"
+	conda:
+		"envs/salmon_env.yaml"
+	shell:
+	  """
+	  cat {input.txome} {input.genome} > {output.gentrome} 2>&1
+    """
+
+# Generate Salmon index using selective alignment
+rule salmon_index:
+	input:
+		gentrome = rules.salmon_gentrome.output,
+		decoys = rules.salmon_decoys.output
+	output:
+		output_dir = directory(dir_out["intermediate_output"] + "salmonindex")
+	log:
+		dir_out["logs"] + "salmon_index/salmon_index.log"
+	params:
+		salmonk = config["salmonk"],
+		anno = config["annotation"],
+		threads = config["ncores"],
+		extra_args = config["extra_args_salmon_index"]
+	conda:
+		"envs/salmon_env.yaml"
+	shell:
+	  """
+	  if [ {params.anno} == "Gencode" ]; then
+      echo 'Salmon version:\n' > {log}; salmon --version >> {log};
+  	  salmon index -t {input.gentrome} -d {input.decoys} -p {params.threads} -i {output.output_dir} --gencode
+  	  {params.extra_args} 
+
+    else
+  	  echo 'Salmon version:\n' > {log}; salmon --version >> {log};
+      salmon index -t {input.gentrome} -d {input.decoys} -p {params.threads} -i {output.output_dir}
+      {params.extra_args} 
+    fi
+    """
+
+## Generate transcript to gene mapping
+rule tx2gene:
+	input:
+		gtf = config["gtf"]
+	output:
+		 dir_out["intermediate_output"] + "tx2gene/txp2gene.tsv"
+	params:
+		anno = config["annotation"]
+	conda:
+		"envs/salmon_env.yaml"
+	shell:
+		"""
+		if [ {params.anno} == "Gencode" ]
+		then
+			echo 'Gencode annotation'
+			bioawk -c gff '$feature=="transcript" {{print $group}}' {input.gtf} | awk -F " " '{{print substr($4,2,
+			length($4)-3) "\t" substr($2,2,length($2)-3)}}' - > {output} 2>&1
+		else
+			echo 'Ensembl annotation'
+			bioawk -c gff '$feature=="transcript" {{print $group}}' {input.gtf} | awk -F " " '{{print substr($6,2,
+			length($6)-3)"\."substr($8,2,length($8)-3) "\t" substr($2,2,length($2)-3)"\."substr($4,2,length($4)-3)}}' - > {output} 2>&1
+		fi
+		"""

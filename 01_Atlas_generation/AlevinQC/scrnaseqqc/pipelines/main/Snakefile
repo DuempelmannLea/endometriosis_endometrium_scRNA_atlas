@@ -1,0 +1,108 @@
+"""The main workflow.
+Determines based on config.yaml which pipelines have to be included and which targets are set. Then
+runs to reach those targets by virtue of the first rule definition (rule `all`)
+"""
+import pandas as pd
+from pathlib import Path
+from collections import OrderedDict
+from typing import List
+from helpers import FastqFileNames, CountFileNames, Targets
+
+
+## ------------------------------------------------------------------------------------ ##
+## I/O
+## ------------------------------------------------------------------------------------ ##
+
+## Paths
+dir_out_root = config["output"] if config["output"].endswith("/") else f"{config['output']}/"
+dir_out_subdirs = ("logs", "intermediate_output", "reports", "test", "plots")
+
+# can be used as e.g. `dir_out["logs"]` or dir_in["fastq"]
+dir_out = {subdir : dir_out_root + subdir + "/" for subdir in dir_out_subdirs}
+dir_in = dict(
+	fastq=config["fastq_dir"],
+	trimmed_fastq=config["trimmed_fastq_dir"],
+	countmat=config["countmat_dir"],
+	training=config["countmat_dir"]
+)
+
+# ensure directories have a trailing slash
+dir_in = {directory: config[f'{directory}_dir'] if config[f'{directory}_dir'].endswith("/")
+				     else f"{config[f'{directory}_dir']}/" for directory in dir_in}
+
+# set the input directory for alevin_quant and fastqc based on config
+if config["trimming"]:
+	directory_in = f"{dir_in['trimmed_fastq']}"
+else:
+	directory_in = f"{dir_in['fastq']}"
+
+
+## initialise helper classes dependant on input type and store lists of file and sample names
+samples = pd.read_csv(config["group_info"], sep=',')
+
+if config["counting"] == True :
+	fastq_filenames = FastqFileNames(dir_in["fastq"], assumptions=config["assumptions"], excludes=config["excludes"])
+	sample_names = fastq_filenames.get_sample_names()
+
+else:
+	count_filenames = CountFileNames(dir_in["countmat"])
+	sample_names = count_filenames.get_sample_names()
+	
+def components_to_select(components: OrderedDict):
+	"""Processes the components that should be included as defined in the config and returns
+	the names for which the component was set to True"""
+	selected_components = [component for component, include in components.items() if include]
+	return selected_components
+
+## ------------------------------------------------------------------------------------ ##
+## Include required pipelines
+## ------------------------------------------------------------------------------------ ##
+	
+def pipelines_from_components(components: OrderedDict, counting: bool) -> List[str]:
+	"""Determines the Snakefiles for the pipelines that should be run based on the user-defined
+	components"""
+	#dictionary containg the needed pipelines for all targets
+	pipeline_by_components = {
+	  "multiqc" : ["qc"],
+	  "report_qc" : ["create_seurat_object","seurat_post_processing"],
+	  "alevin_qc" : ["quantification"]
+	  }
+	# subset pipes for selected targets
+	selected_pipeline_dict = { key:pipeline_by_components[key] for (key,value) in config["components"].items() if value }
+	selected_pipeline_names = [k for i,j in selected_pipeline_dict.items() for k in j if k]
+	# add quantification pipe if counting is True
+	if counting:
+	  selected_pipeline_names = set(list( ["qc","reference_index","fastq_trimming","quantification"] + selected_pipeline_names ))
+	else:
+	  selected_pipeline_names = set(selected_pipeline_names) 
+	# return paths to pipelines
+	snakefiles = [str(Path("..")/pipeline_name/"Snakefile") for pipeline_name in selected_pipeline_names]
+	print(snakefiles)
+	return sorted(snakefiles)
+
+snakefiles = pipelines_from_components(config["components"], counting = config['counting'])
+for snakefile in snakefiles:
+	include: snakefile
+## ------------------------------------------------------------------------------------ ##
+## Define targets for rule `all`
+## ------------------------------------------------------------------------------------ ##
+
+target_by_component = dict(
+	multiqc = dir_out["reports"] + "multiqc/multiqc_report.html",
+	report_qc = dir_out["intermediate_output"] + "doublet_finder/raw.rds",
+	alevin_qc = expand(dir_out["reports"]+ "alevin_qc/{sample}_alevinReport.html", sample = sample_names),
+	)
+
+rule all:
+	input: 
+	  Targets(components = config["components"], targets = target_by_component).selected_targets
+
+## -------------------------------------------------------------------------------------------------------------------------- ##
+## Return message when workflow is finished
+## -------------------------------------------------------------------------------------------------------------------------- ##
+
+onsuccess:
+    print("Workflow finished, no error!")
+
+onerror:
+    print("An error occurred!")

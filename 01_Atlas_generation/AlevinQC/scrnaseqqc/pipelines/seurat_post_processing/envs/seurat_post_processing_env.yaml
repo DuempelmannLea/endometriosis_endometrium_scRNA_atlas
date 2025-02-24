@@ -1,0 +1,21 @@
+name: scairap-postprocessing
+channels:
+- bioconda
+- conda
+- conda-forge
+- default
+dependencies:
+- r = 4.0
+- r-dplyr = 1.0.5
+- r-purrr = 0.3.4
+- r-tibble = 3.1.0
+- r-seurat = 4.0.1 
+- r-future = 1.21.0
+- bioconductor-scran = 1.18.5
+- bioconductor-SingleCellExperiment = 1.12.0
+- bioconductor-scater = 1.18.0
+- bioconductor-scds = 1.6.0
+- bioconductor-scdblfinder = 1.4.0
+- bioconductor-multtest = 2.46.0
+- r-mutoss = 0.1.12 
+- r-metap = 1.4 

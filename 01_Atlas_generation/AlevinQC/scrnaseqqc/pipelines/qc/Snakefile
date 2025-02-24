@@ -1,0 +1,41 @@
+## ------------------------------------------------------------------------------------ ##
+## Quality control
+## ------------------------------------------------------------------------------------ ##
+## FastQC, original reads
+rule fastqc:
+	input:
+		fastq = directory_in + fastq_filenames.filenames_as_wildcards
+	# check as alevin quant
+	output:
+		f"{dir_out['reports']}fastqc/{fastq_filenames.wildcard_filenames_no_ext}/{fastq_filenames.wildcard_filenames_no_ext}_fastqc.zip"
+	params:
+		out_dir = f"{dir_out['reports']}fastqc/{fastq_filenames.wildcard_filenames_no_ext}",
+		extra_args = config["extra_args_fastqc"]
+	conda:
+		"envs/qc_env.yaml"
+	threads:
+		config["ncores"]
+	shell:
+		 "mkdir -p {params.out_dir}; "
+		 "fastqc {params.extra_args} --outdir {params.out_dir} -t {threads} {input.fastq}  2>&1"
+
+## MultiQC
+rule multiqc:
+	input:
+		[f"{dir_out['reports']}fastqc/{sample_filename}/{sample_filename}_fastqc.zip"
+		 for sample_filename in fastq_filenames.literal_filenames_no_ext]
+	output:
+		dir_out["reports"] + "multiqc/multiqc_report.html"
+	params:
+		multiqc_dir = dir_out["reports"] + "multiqc",
+		fastqc_dir = f"{dir_out['reports']}fastqc/",
+		extra_args = config["extra_args_multiqc"]
+	log:
+		dir_out["logs"] + "multiqc/multiqc.log"
+	conda:
+		"envs/qc_env.yaml"
+	threads:
+		config["ncores"]
+	shell:
+		 "echo 'MultiQC version:\n' > {log}; multiqc --version >> {log}; "
+		 "multiqc {params.fastqc_dir} -f {params.extra_args} -o {params.multiqc_dir}  2>&1"

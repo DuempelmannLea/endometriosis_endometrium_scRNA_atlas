@@ -1,0 +1,16 @@
+name: scairap-create_seurat_object
+channels:
+- bioconda
+- conda
+- conda-forge
+- default
+dependencies: 
+- r = 4.0
+- bioconductor-biomaRt = 2.46.3
+- bioconductor-tximeta = 1.8.0
+- bioconductor-fishpond = 1.6.0
+- bioconductor-SummarizedExperiment = 1.20.0
+- r-dplyr = 1.0.5
+- r-matrix =1.5-2
+- r-seurat = 4.0.1
+- r-testthat = 3.0.2
