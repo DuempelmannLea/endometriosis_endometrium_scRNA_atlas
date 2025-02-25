@@ -97,7 +97,7 @@ ggsave(paste0(dir_out, "Fig1d_3.pdf"),
 
 ```
 
-Figure 1e, 2a, S3a
+Figure 1e, 2a
 CODE running, need to extend the PCA analysis folder
 dir_out <- "/home/common/data/output/projects/ENDO/E044/A072/allcells_EndoAtlas_SCTassay/"
 
@@ -124,14 +124,8 @@ biplot(p,
       ellipseLineSize = 1.0,
     labSize = 0,drawConnectors = FALSE,
     legendPosition = 'top', legendLabSize = 16, legendIconSize = 8.0)
-
-#Supplementary Data Figure 3a
-biplot(p,
-    colby = 'EndometriosisStatus',
-    labSize = 0,drawConnectors = FALSE, 
-    hline = 0, vline = 0,
-    legendPosition = 'right')
 ```
+
 
 Figure 2b
 CODE OK
@@ -734,6 +728,23 @@ p <- Seurat::DotPlot(
 # Save DotPlot
 ggsave(plot = p, "./dotplots/Tan2022Fig3b_stromal_SCT.pdf", width = 7, height = 7)
 
+```
+
+
+Supplementary Figure 3a
+CODE running, need to extend the PCA analysis folder
+dir_out <- "/home/common/data/output/projects/ENDO/E044/A072/allcells_EndoAtlas_SCTassay/"
+
+```{r}
+
+p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas.rds"))
+
+#Supplementary Data Figure 3a
+biplot(p,
+    colby = 'EndometriosisStatus',
+    labSize = 0,drawConnectors = FALSE, 
+    hline = 0, vline = 0,
+    legendPosition = 'right')
 ```
 
 Supplementary Figure 3b and e
