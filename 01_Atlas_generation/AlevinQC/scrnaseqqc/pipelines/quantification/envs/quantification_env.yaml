@@ -1,0 +1,14 @@
+name: scairap-quantification
+channels:
+- bioconda
+- conda
+- conda-forge
+- default
+dependencies:
+- r = 3.6
+- r-dplyr = 1.0.2
+- r-jsonlite = 1.7.2
+- r-rjson = 0.2.20
+- bioconductor-tximport = 1.14.0
+- bioconductor-fishpond = 1.2.0
+- r-testthat = 2.3.2

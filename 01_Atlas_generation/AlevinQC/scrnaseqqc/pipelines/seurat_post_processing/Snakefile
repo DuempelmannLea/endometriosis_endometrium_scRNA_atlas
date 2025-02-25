@@ -1,0 +1,25 @@
+## ------------------------------------------------------------------------------------ ##
+## Doublet detection
+## ------------------------------------------------------------------------------------ ##
+rule doublet_finder:
+	input:
+		rules.seurat_merge.output.datacombined
+	output:
+		dir_out["intermediate_output"] + "doublet_finder/raw.rds"
+	log:
+		dir_out["logs"] + "doublet_finder/doublet_finder.log",
+		dir_out["logs"] + "doublet_finder/doublet_finder.Rdata"
+	conda:
+		"envs/seurat_post_processing_env.yaml"
+	script:
+		"scripts/sce_doubletdet.R"
+
+## -------------------------------------------------------------------------------------------------------------------------- ##
+## Return message when workflow is finished
+## -------------------------------------------------------------------------------------------------------------------------- ##
+
+onsuccess:
+    print("Workflow finished, no error!")
+
+onerror:
+    print("An error occurred!")

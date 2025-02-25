@@ -1,0 +1,96 @@
+import re
+
+# run in expect cells mode
+def alevin_expectcells(sample, s, nCells):
+    if sample in s:
+        re = ['--expectCells', str(nCells[sample])]
+        " ".join(re)
+        return re
+    else:
+        return print(" ")
+
+## Estimate abundance with Salmon alevin
+# chromversion argument is not compatible with other arugments so only set if `extra_args_alevin_quant` is blank
+if config["extra_args_alevin_quant"] == "":
+	chromversion = f"--{config['chromversion']}"
+	extra_args = ""
+
+else:
+	print(f"**As extra arguments have been set, the chromium version specified in the config file "
+		  f"({config['chromversion']}) has been ignored to prevent duplicate scRNA protocols. Please add chromium "
+		  f"version as an additional extra argument if required.")
+	chromversion = ""
+
+	# dumpMtx is required for pipeline running and so is hardcoded below, remove if also specified by user to prevent
+	# duplicate options
+	check = re.search(r"(.*)--dumpMtx(.*)", config["extra_args_alevin_quant"])
+	if check:
+		extra_args = check.group(1) + check.group(2)
+	else:
+		extra_args = config["extra_args_alevin_quant"]
+
+rule alevin_quant:
+	input:
+		alevintx2gene = dir_out["intermediate_output"] + "tx2gene/txp2gene.tsv",
+		salmonindex = directory(dir_out["intermediate_output"] + "salmonindex"),
+		fastq1 = fastq_filenames.get_semi_literal_names(1),
+		fastq2 = fastq_filenames.get_semi_literal_names(2)
+	output:
+		matrix = dir_out["intermediate_output"] + "alevin_quant/{sample}/alevin/quants_mat.gz",
+		cols = dir_out["intermediate_output"] + "alevin_quant/{sample}/alevin/quants_mat_cols.txt",
+		rows = dir_out["intermediate_output"] + "alevin_quant/{sample}/alevin/quants_mat_rows.txt",
+		matrix_mtx = dir_out["intermediate_output"] + "alevin_quant/{sample}/alevin/quants_mat.mtx.gz"
+	params:
+		alevindir = dir_out["intermediate_output"] + "alevin_quant",
+		chromversion = chromversion,
+		expectcells = lambda wildcards: alevin_expectcells(wildcards.sample, config["s"], config["nCells"]),
+		extra_args = extra_args,
+		library_type = config["library_type"]
+	conda:
+		"envs/salmon_env.yaml"
+	threads:
+		config["ncores"]
+	log:
+	  	dir_out["logs"] + "alevin_quant/{sample}.log"
+	shell:
+		"salmon alevin {params.library_type} {params.extra_args} {params.chromversion} --dumpMtx -1 {input.fastq1} -2 {"
+		"input.fastq2} -i {input.salmonindex} -p {threads} -o {params.alevindir}/{wildcards.sample} "
+		"--tgMap {input.alevintx2gene} --dumpFeatures > {log} 2>&1"
+
+def alevinQC_import(wildcards):
+ 	# decision based on content of output file
+ 	return rules.alevin_quant.output.matrix_mtx if config["counting"] else ""
+
+rule alevin_qc_sample:
+	input:
+		dir_out["intermediate_output"] + "alevin_quant/{sample}/alevin/quants_mat.mtx.gz"
+	output:
+		dir_out["reports"]+ "alevin_qc/{sample}_alevinReport.html",
+		dir_out["intermediate_output"] + "alevin_qc/{sample}_final_whitelist.rds"
+	log:
+		dir_out["logs"] + "alevin_qc_sample/alevin_qc_{sample}.log",
+		dir_out["logs"] + "alevin_qc_sample/alevin_qc_{sample}.RData"
+	conda:
+		"envs/alevinqc_env.yaml"
+	script:
+		"scripts/alevinQCsample.R"
+
+## ------------------------------------------------------------------------------------ ##
+## Data import from alevin or data import from count matrix (mtx format)
+## ------------------------------------------------------------------------------------ ##
+
+## Import directly from alevin directory
+rule alevin_import:
+	input:
+		rules.alevin_quant.output
+	output:
+		dir_out["intermediate_output"] + "alevin_import/{sample}/quants.rds"
+	log:
+		dir_out["logs"] + "alevin_import/alevin_import_{sample}.log",
+		dir_out["logs"] + "alevin_import/alevin_import_{sample}.RData"
+	conda:
+		"envs/quantification_env.yaml"
+	script:
+		"scripts/alevin_import.R"
+
+

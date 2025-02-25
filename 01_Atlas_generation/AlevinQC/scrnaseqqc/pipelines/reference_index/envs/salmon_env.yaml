@@ -1,0 +1,7 @@
+name: scairap-salmon
+channels:
+- bioconda
+- conda-forge
+dependencies:
+- salmon = 1.4
+- bioawk = 1.0

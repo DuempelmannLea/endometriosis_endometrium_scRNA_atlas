@@ -1,0 +1,96 @@
+## Alternative import of count matrix, either csv or mtx format
+def count_import(configfile):
+    # decision based on content of output file
+	if count_filenames.convention == "mtx":
+		return [dir_in["countmat"] + "{sample}/quants_mat.mtx.gz", dir_in["countmat"] +
+				"{sample}/quants_mat_cols.txt", dir_in["countmat"] + "{sample}/quants_mat_rows.txt"]
+
+	elif count_filenames.convention == "10X_old":
+		return dir_in["countmat"] + "{sample}/matrix.mtx"
+
+	elif count_filenames.convention == "10X_new":
+		return dir_in["countmat"] + "{sample}/matrix.mtx.gz"
+
+	elif count_filenames.convention == "alevin":
+		return [dir_in["countmat"] + "{sample}/alevin/quants_mat.gz", dir_in["countmat"] +
+				"{sample}/alevin/quants_mat_cols.txt", dir_in["countmat"] + "{sample}/alevin/quants_mat_rows.txt"]
+
+ # input function for the rule aggregate
+def aggregate_import(wildcards):
+    # decision based on content of output file
+        if config["counting"] == True:
+            return rules.alevin_import.output
+        if config["counting"] == False:
+            return rules.countimport.output
+            
+## Import from a existing count matrix
+rule countimport:
+	input:
+		count_import
+	output:
+		dir_out["intermediate_output"] + "countimport/{sample}/quants.rds"
+	conda:
+		"envs/create_seurat_object_env.yaml"
+	params:
+	  count_format_convention = count_filenames.convention if config["counting"] == False
+	  else ""
+	log:
+		dir_out["logs"] + "countimport/countimport_{sample}.log",
+		dir_out["logs"] + "countimport/countimport_{sample}.RData"
+	script:
+		"scripts/count_import.R"
+
+## ------------------------------------------------------------------------------------ ##
+## Data import for Seurat and change to gene symbol names
+## ------------------------------------------------------------------------------------ ##
+# create lookup table for gene names
+rule gene_lookup:
+	input:
+		input = expand(dir_out["intermediate_output"] + "alevin_import/{sample}/quants.rds", sample = sample_names) if config["counting"] == True
+		else expand(dir_out["intermediate_output"] + "countimport/{sample}/quants.rds",sample = sample_names)
+	output:
+		dir_out["intermediate_output"] + "gene_lookup/gene_lookup.rds"
+	log:
+		dir_out["logs"] + "gene_lookup/gene_lookup.log",
+		dir_out["logs"] + "gene_lookup/gene_lookup.RData"
+	conda:
+		"envs/create_seurat_object_env.yaml"
+	script:
+		"scripts/gene_lookup.R"
+
+# create Seurat object for each sample and rename genes to HUGO
+rule import_seurat_rename:
+	input:
+		aggregate_import,
+		dir_out["intermediate_output"] + "gene_lookup/gene_lookup.rds"
+	output:
+		dir_out["intermediate_output"] + "import_seurat_rename/{sample}/seu_quants.rds"
+	log:
+		dir_out["logs"] + "import_seurat_rename/import_seurat_rename_{sample}.log",
+		dir_out["logs"] + "import_seurat_rename/import_seurat_rename_{sample}.RData"
+	conda:
+		"envs/create_seurat_object_env.yaml"
+	script:
+		"scripts/seurat_import.R"
+
+## ------------------------------------------------------------------------------------ ##
+##  Merge different datasets
+## ------------------------------------------------------------------------------------ ##
+# merge the samples to one Seurat object
+rule seurat_merge:
+	input:
+		expand(dir_out["intermediate_output"] + "import_seurat_rename/{sample}/seu_quants.rds", sample = sample_names)
+	output:
+		datacombined = dir_out["intermediate_output"] + "seurat_merge/merged.rds",
+		testdata = dir_out["test"] + "seurat_merge/data_merge_summary.csv"
+	log:
+		dir_out["logs"] + "seurat_merge/seurat_merge.log",
+		dir_out["logs"] + "seurat_merge/seurat_merge.Rdata"
+	params:
+		sample_names = sample_names
+	resources:
+		mem_mb=config['memory']
+	conda:
+		"envs/create_seurat_object_env.yaml"
+	script:
+		"scripts/seurat_merge.R"

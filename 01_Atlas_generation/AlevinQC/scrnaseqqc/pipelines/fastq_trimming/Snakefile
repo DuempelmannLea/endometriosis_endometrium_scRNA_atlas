@@ -1,0 +1,20 @@
+# conditional fastp trimming
+rule fastp:
+	input:
+		read1 = dir_in["fastq"] + fastq_filenames.r1_names,
+		read2 = dir_in["fastq"] + fastq_filenames.r2_names
+	output:
+		trimmedread1 = dir_in["trimmed_fastq"] + fastq_filenames.r1_names,
+		trimmedread2 = dir_in["trimmed_fastq"] + fastq_filenames.r2_names,
+		html = dir_in["trimmed_fastq"] + f"html/{fastq_filenames.read_independant_wildcard_filenames}.html",
+		json = dir_in["trimmed_fastq"] + f"json/{fastq_filenames.read_independant_wildcard_filenames}.json"
+	log:
+		f"{dir_out['logs']}fastp/{fastq_filenames.read_independant_wildcard_filenames}.log"
+	params:
+		extra_args = config["extra_args_fastp"]
+	threads: config["ncores"]
+	conda:
+		"envs/fastq_trimming_env.yaml"
+	shell:
+		"fastp -i {input.read1} -I {input.read2} -o {output.trimmedread1} -O {output.trimmedread2} -h {output.html} "
+		"-j {output.json} --thread {threads} {params.extra_args} 2>&1"
