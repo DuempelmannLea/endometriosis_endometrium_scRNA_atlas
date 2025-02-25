@@ -13,6 +13,8 @@ library(dplyr)
 library(ggplot2)
 library(tibble)
 library(cowplot)
+library(ggrepel)
+
 
 dir_out <- "/home/common/data/output/projects/ENDO/E044/A031/"
 setwd(dir_out)
@@ -53,9 +55,6 @@ text(x=18.45, y=1.5, srt=90, '18.53202')
 
 #Best result: no log2 scale, bw = 0.02 with resulting inflection point 18.53202
 
-length(RNAlistRDSdf$gene)
-RNAlistRDSdf_filt <- RNAlistRDSdf %>% dplyr::filter(AveExpr > 18.53202) 
-length(RNAlistRDSdf_filt$gene)
 ```
 
 summarize DEGs into df and plot
@@ -100,8 +99,7 @@ write.csv(RNAlistRDS005,"/home/common/data/output/projects/ENDO/E044/A031/RNAlis
 
 ```
 
-
-gProfiler based on RNA/SCT assay and per annotation with gene expression >18.53202
+gProfiler based on RNA assay and per annotation with gene expression >18.53202
 ```{r}
 ##function to run gProfiler and save output
 gProfiler_FUN <- function(x,ANALYSIS,GRADE,ORDERED_QUERY,ASSAY,dir_out) {
@@ -151,11 +149,8 @@ dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E0
 dir.create(dir_out, recursive = TRUE)
 setwd(dir_out)
 #Read paths to DEG output .rds files
-if (ASSAY == "RNA") { 
-    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
-    } else if (ASSAY == "SCT") {
-    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "mm_dream_sct_counts_all.rds", recursive = TRUE, full.names = TRUE)
-    }
+PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
+
 #Select paths based on all/mild/severe
 if (GRADE == "all") { 
     PATHS <- PATHS[!grepl("_severe", PATHS)]
@@ -178,119 +173,7 @@ lapply(RNAlistRDS, gProfiler_FUN, ANALYSIS = ANALYSIS,GRADE = GRADE,ORDERED_QUER
 RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
 RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
 RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
 ```
-
-##Ongoing xxxx
-gProfiler based on RNA assay and per annotation with gene expression >18.53202 and BH pval adjusted
-```{r}
-##function to run gProfiler and save output
-gProfiler_FUN <- function(x,ANALYSIS,GRADE,ORDERED_QUERY,ASSAY,dir_out) {
-#gProfiler
-custom_bg <- unique(x$gene)
-query <- x %>%
-  dplyr::filter(AveExpr > 18.53202) %>%
-  dplyr::filter(p_adj.loc < 0.05) %>%
-  dplyr::arrange(p_adj.loc) #arrange by lowest p_adj.loc
-if(nrow(query) > 0){
-query <- distinct(query, gene, .keep_all= TRUE) #remove duplicates of gene with higher p_adj.loc
-query <- query$gene
-gostres <<- gost(query = query, 
-                organism = "hsapiens", 
-                ordered_query = ORDERED_QUERY, #can use TRUE, p_adj.loc has been arranged 
-                multi_query = FALSE, 
-                significant = TRUE, #only statistically significant results should be returned
-                exclude_iea = FALSE, 
-                measure_underrepresentation = FALSE, 
-                evcodes = TRUE,
-                user_threshold = 0.05, 
-                correction_method = "g_SCS", #g_SCS is default
-                domain_scope = "annotated", #if custom_bg is set, I believe this shouldn't matter too much
-                custom_bg = custom_bg, #custom background, use!
-                numeric_ns = "", 
-                sources = NULL, #by default all sources are analyzed
-                as_short_link = FALSE)
-if(length(gostres) > 0){
-results <- gostres$result
-results$cluster_id <- levels(as.factor(x$cluster_id))
-results$analysis <- print(ANALYSIS)
-results$assay <- print(ASSAY)
-results$grade <- print(GRADE) 
-results$ordered_query <- print(ORDERED_QUERY)
-results$parents <- NULL
-write.csv(results,paste0("gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".csv"))
-print(paste0("Saved gotres as gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".csv"))
-plot <- gostplot(gostres, capped = TRUE, interactive = FALSE) + ggtitle(paste0("gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY)))
-ggsave(plot = plot, filename = paste0(dir_out,"gProfiler_",ANALYSIS,"_",GRADE,"_",levels(as.factor(x$cluster_id)),"_OrderedQuery",as.character(ORDERED_QUERY),".png"), width = 7, height = 5)
-print("Saved plot")
-}
-}
-}
-##function to run gProfiler_FUN on different grades, analysis and assay
-RUN_gProfier <- function(GRADE, ANALYSIS,ASSAY,SPECIFICATION){
-dir_out <- paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E044",ANALYSIS,"/",ASSAY,"assay_",SPECIFICATION,"/")
-dir.create(dir_out, recursive = TRUE)
-setwd(dir_out)
-#Read paths to DEG output .rds files
-if (ASSAY == "RNA") { 
-    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "res_mm_dream.rds", recursive = TRUE, full.names = TRUE)
-    } else if (ASSAY == "SCT") {
-    PATHS <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/",ANALYSIS), pattern = "mm_dream_sct_counts_all.rds", recursive = TRUE, full.names = TRUE)
-    }
-#Select paths based on all/mild/severe
-if (GRADE == "all") { 
-    PATHS <- PATHS[!grepl("_severe", PATHS)]
-    PATHS <- PATHS[!grepl("_mild", PATHS)]
-    print(PATHS)
-    } else if (GRADE == "mild") {
-    PATHS <- PATHS[grepl("_mild", PATHS)]
-    print(PATHS)
-    } else if  (GRADE == "severe") {
-    PATHS <- PATHS[grepl("_severe", PATHS)]
-    print(PATHS)
-    } 
-RNAlistRDS <- lapply(PATHS, readRDS)
-RNAlistRDS <- unlist(RNAlistRDS, recursive = FALSE) #combine sub-lists
-RNAlistRDS <- RNAlistRDS[!duplicated(RNAlistRDS)]
-lapply(RNAlistRDS, gProfiler_FUN, ANALYSIS = ANALYSIS,GRADE = GRADE,ORDERED_QUERY = FALSE, ASSAY = ASSAY, dir_out = dir_out)
-lapply(RNAlistRDS, gProfiler_FUN, ANALYSIS = ANALYSIS,GRADE = GRADE,ORDERED_QUERY = TRUE, ASSAY = ASSAY, dir_out = dir_out)
-}
-
-RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "RNA",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "all", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "severe", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-RUN_gProfier(GRADE = "mild", ANALYSIS = "A030", ASSAY = "SCT",SPECIFICATION = "PerAnnotation_AveExpr18_53202")
-```
-
-
-
-```{r Combine output tables from gProfiler}
-#functions
-summarize_gProfiler_PerAnnotation <- function(x){
-ASSAY = "A030"
-##Combine all results
-gProfilerlist <- list.files(path = paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E044",ASSAY,"/",x), pattern = "TRUE.csv$|FALSE.csv$", full.names = TRUE)
-gProfilerlist <- lapply(gProfilerlist, read.csv) #read .rds
-#Combine all gProfiler results into one df, save
-gProfiler <- plyr::rbind.fill(gProfilerlist) #bind deg lists into one df
-gProfiler$specification <- print(x)
-#save csv
-write.csv(gProfiler, paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E044",ASSAY,"/gProfiler_",ASSAY,"_",x,"_summary.csv"))
-table(gProfiler$grade)
-#table(gProfiler$cluster_id,gProfiler$grade)
-}
-
-ASSAY = "A030"
-DIRSLIST <- list.dirs(path = paste0("/home/common/data/output/projects/ENDO/E044/A031/gProfiler/E044",ASSAY),full.names = FALSE)
-DIRSLIST_Merged <- DIRSLIST[grepl("Merged", DIRSLIST)]
-DIRSLIST_PerAnnotation <- DIRSLIST[grepl("PerAnnotation", DIRSLIST)]
-lapply(DIRSLIST_PerAnnotation,summarize_gProfiler_PerAnnotation)
-```
-
 
 
 ```{r setup}
@@ -315,49 +198,6 @@ Tan_clusters <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAli
   pull()
 gProfiler_df <- gProfiler_df %>% 
   filter(cluster_id %in% Tan_clusters)
-
-###interesting term_names
-#Immune System and inflammation
-ImmuneTermsGREP <- c("TGF", "TNF", "NOD", "IL-", "immun", "cytokine", "chemokine", "NF-kappa")
-ImmuneTerms <- gProfiler_df %>%
-  filter(grepl(paste(ImmuneTermsGREP, collapse = "|"), term_name, ignore.case = TRUE)) %>% 
-  pull(term_name) %>% 
-  unique()
-#angiogenesis
-angiogenesisTerms  <- c(unique(gProfiler_df$term_name[grepl("VEGF", gProfiler_df$term_name, ignore.case = TRUE)]),
-                       unique(gProfiler_df$term_name[grepl("angiog", gProfiler_df$term_name, ignore.case = TRUE)]))
-#extracellullar terms
-extracellularTerms <- unique(gProfiler_df$term_name[grepl("extracellular", gProfiler_df$term_name, ignore.case = TRUE)])
-#cell adhesion
-adhesionTermsGREP <- c("adhesion", "junction")
-adhesionTerms <- gProfiler_df %>%
-  filter(grepl(paste(adhesionTermsGREP, collapse = "|"), term_name, ignore.case = TRUE)) %>% 
-  pull(term_name) %>% 
-  unique()
-#growth factors
-insulinTerms <- unique(gProfiler_df$term_name[grepl("insulin", gProfiler_df$term_name, ignore.case = TRUE)])
-#Other interesting terms
-otherTerms <- c('CTNNB1-DDX5-HDGF complex') #Hepatoma-Derived Growth Factor and DDX5 Promote Carcinogenesis and Progression of Endometrial Cancer by Activating β-Catenin
-# Define the list of interesting terms
-interesting_terms <- list(
-  ImmuneTerms = ImmuneTerms,
-  AngiogenesisTerms = angiogenesisTerms,
-  ExtracellularTerms = extracellularTerms,
-  AdhesionTerms = adhesionTerms,
-  InsulinTerms = insulinTerms
-  #,OtherTerms = otherTerms
-)
-# Loop through the list and assign categories
-gProfiler_df$DEG_category <- NA
-for (category_name in names(interesting_terms)) {
-  terms <- interesting_terms[[category_name]]
-  for (term in terms) {
-    gProfiler_df$DEG_category[gProfiler_df$term_name == term] <- category_name
-  }
-}
-table(gProfiler_df$DEG_category)
-
-
 
 gProfiler_df %>% 
   #dplyr::select(p_value, term_size, query_size, intersection_size, term_id, term_name) %>% 
@@ -415,126 +255,7 @@ ggsave(paste0(dir_out, "GOterms_all_severe_colorCellID.pdf"),
   plot = last_plot(),
   width = 14, height = 14)
 
-##############################################################################################################################
-##Merge the DEG table with the Terms 
 
-#RNA assay DEGs from proliferative samples
-RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv") %>%
-  filter(annotation_reference == "Tan") %>%
-  filter(AveExpr > 18.53202)
-##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
-hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes, there are no hb genes in the DEG list
-mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes, no genes
-rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes, 165 genes
-RNAlistRDS005_df <- RNAlistRDS005_df %>%
-  dplyr::filter(!gene %in% rb.genes) #Focus on protein coding genes
-
-#Mutate so each row contains only a single gene in the "gene" column
-gProfiler_df <- gProfiler_df %>%
-  mutate(gene = strsplit(intersection, ",")) %>%
-  unnest(gene) %>%
-  dplyr::rename(stage = grade) %>%
-  dplyr::filter(assay == "RNA")
-
-# left_join RNAlistRDS005_df with Terms by c("cluster_id", "gene", "stage"), no multiple match warning
-result_df <- left_join(RNAlistRDS005_df, gProfiler_df, by = c("cluster_id", "gene","stage"))
-
-###Plot DEGs
-# Create vulcano plot
-ggplot(result_df, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = result_df, aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = result_df %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"),
-             aes(color = DEG_category), size = 2) +
-  theme_minimal() +
-  facet_wrap(~stage)
-ggsave(filename = paste0(dir_out, 'vulcano_DEG_category_InterestingTerms.pdf'), width =8,height=6)
-
-# Create vulcano plot with gene labels
-#logFC vs AveExpr with gene labels
-InterestingTerms <- result_df[,c(1:12,34)] %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms") %>% 
-  distinct(gene, logFC,AveExpr,p_adj.loc, .keep_all = TRUE) %>% 
-  #dplyr::filter(logFC > 0.5 | logFC < -0.5) %>% 
-  dplyr::filter(stage == "all", annotation_reference == "Tan", AveExpr > 18.5, logFC > 0.2)
-plot <- ggplot(result_df, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(data = result_df, aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = result_df %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"),
-             aes(color = DEG_category), size = 2) +
-  theme_minimal()+
-  ylim(0,18) +
-  xlim(-.9,1.2) +
-  geom_text_repel(data = InterestingTerms,
-                  aes(label = gene),
-                  size = 2,
-                  max.overlaps = 50,
-                  box.padding   = 0.35, 
-                  point.padding = 0.5,
-                  segment.color = 'grey50')
-plot
-ggsave(plot, filename = paste0(dir_out, 'vulcano_DEG_category_InterestingTerms_labelled.pdf'), width =16,height=12)
-
-# Create vulcano plot with gene labels
-#logFC vs AveExpr with gene labels
-InterestingTerms <- result_df[,c(1:12,34)] %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms") %>% 
-  distinct(gene, logFC,AveExpr,p_adj.loc, .keep_all = TRUE) %>% 
-  #dplyr::filter(logFC > 0.5 | logFC < -0.5) %>% 
-  dplyr::filter(stage == "all", annotation_reference == "Tan", abs(logFC) > 0.5)
-result_df_all <- filter(result_df,stage == "all")
-ggplot(result_df_all, aes(x = logFC, y = -log10(p_adj.loc))) +
-  geom_point(aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = result_df_all %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"),
-             aes(x = logFC, y = -log10(p_adj.loc), color = DEG_category), size = 2) +
-  theme_minimal() +
-  ylim(-2, 17) +
-  xlim(-0.9, 1.2) +
-  geom_text_repel(data = result_df_all[2:12] %>% dplyr::filter(abs(logFC) > 0.5) %>% distinct(),
-                  aes(label = gene),
-                  size = 2,
-                  max.overlaps = 50,
-                  box.padding = 0.35,
-                  point.padding = 0.5,
-                  segment.color = 'grey50') +
-  facet_wrap(~stage)
-ggsave(filename = paste0(dir_out, 'vulcano_DEG_category_InterestingTerms_labelledlogFC05.pdf'), width =8,height=6)
-
-results_df_logFC05 <- result_df[2:12] %>% dplyr::filter(abs(logFC) > 0.5) %>% distinct()
-write.csv(results_df_logFC05, paste0(dir_out,'TermslogFC05.csv'))
-
-#logFC vs AveExpr
-ggplot(result_df, aes(x = log2(AveExpr-17.00183), y = logFC)) +
-  geom_point(data = result_df, aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = result_df %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"),
-             aes(color = DEG_category), size = 2) +
-  theme_minimal() +
-  geom_text(data = result_df %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"), aes(label = gene))
-ggsave(filename = paste0(dir_out, 'AveExprLOG2_logFC_InterestingTerms.pdf'), width =8,height=6)
-
-#logFC vs AveExpr with gene labels
-InterestingTerms <- result_df[,c(1:12,34)] %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms") %>% 
-  distinct(gene, logFC,AveExpr,p_adj.loc, .keep_all = TRUE) %>% 
-  #dplyr::filter(logFC > 0.5 | logFC < -0.5) %>% 
-  dplyr::filter(stage == "all", annotation_reference == "Tan", AveExpr > 18.5)
-
-ggplot(result_df, aes(x = log2(AveExpr-17.00183), y = logFC)) +
-  geom_point(data = result_df, aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = InterestingTerms , aes(color = DEG_category), size = 2) +
-  theme_minimal() +
-  geom_text_repel(data = InterestingTerms,
-                  aes(label = gene),
-                  size = 2,
-                  max.overlaps = 35,
-                  box.padding   = 0.35, 
-                  point.padding = 0.5,
-                  segment.color = 'grey50')
-ggsave(filename = paste0(dir_out, 'AveExprLOG2_logFC_InterestingTerms_labelled.pdf'), width =14,height=8)
-
-#logFC vs AveExpr
-ggplot(result_df, aes(x = AveExpr, y = logFC)) +
-  geom_point(data = result_df, aes(color = "Non-overlapping"), size = 1, color = "grey") +
-  geom_point(data = result_df %>% dplyr::filter(!is.na(DEG_category), DEG_category != "EndometriumTerms"),
-             aes(color = DEG_category), size = 2) +
-  theme_minimal()
- ggsave(filename = paste0(dir_out, 'AveExpr_logFC_InterestingTerms.pdf'), width =8,height=6)
- 
 ```
 
 ```{r Make DotPlots}
