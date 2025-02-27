@@ -2,14 +2,6 @@
 ## 00. Load library and environment
 ####################################
 
-# log
-log <- file(snakemake@log$log_file, open="wt")
-sink(log)
-sink(log, type="message")
-
-# image
-save.image(file = paste0(snakemake@log$log_object) )
-
 # load packages
 suppressPackageStartupMessages({
   library(dplyr)
@@ -20,7 +12,7 @@ suppressPackageStartupMessages({
 
 
 # load seurat object
-seurat_obj <- readRDS(snakemake@input[[1]])
+seurat_obj <- readRDS(./seurat.rds)
 
 # Subset epithelial cells
 Idents(seurat_obj) <- seurat_obj@meta.data$AnnotationMain
@@ -39,10 +31,8 @@ seurat_obj <- subset(seurat_obj, idents = samples_integration)
 ## 01. Normalization split per batch
 ####################################
 
-regr.vars <- strsplit(snakemake@params[[1]], split='_')[[1]]
-
-# split by batch
-Idents(seurat_obj) <- seurat_obj@meta.data$sample
+# SCTransform and regress out percent.mt and sample
+regr.vars <- c("percent.mt","sample")
 seurat_obj <- SCTransform(seurat_obj,
                           vars.to.regress = regr.vars,
                           conserve.memory=FALSE,
@@ -50,8 +40,10 @@ seurat_obj <- SCTransform(seurat_obj,
                           vst.flavor = "v2",
                           return.only.var.genes=TRUE)
 
-seurat_obj_split <- SplitObject(seurat_obj, split.by = snakemake@params[[2]])
+# split by 10x capture batch
+seurat_obj_split <- SplitObject(seurat_obj, split.by = "batch")
 
-saveRDS(seurat_obj_split, snakemake@output[[1]])
+# save split seurat object
+saveRDS(seurat_obj_split, "./seurat_obj_split.rds")
 sessionInfo()
 date()
