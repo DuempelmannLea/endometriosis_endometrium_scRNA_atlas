@@ -60,7 +60,7 @@ While the code is available for reuse, it is primarily provided as a resource to
 **[Lea Duempelmann](https://github.com/DuempelmannLea)**
 **[Shaoline Sheppard](https://github.com/)**
 **[Angelo Duo](https://github.com/)**
-**[Dennis Goehlsdorf](https://github.com/)**
+Dennis Goehlsdorf
 **[Sukalp Muzumdar](https://github.com/)**
 **[Ryan Lusby](https://github.com/)**
 **[Sarah Carl](https://github.com/)**
