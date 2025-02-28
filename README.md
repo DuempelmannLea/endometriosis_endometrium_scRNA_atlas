@@ -57,13 +57,13 @@ While the code is available for reuse, it is primarily provided as a resource to
 
 ## **Authors and Acknowledgement**
 ### **Authors**
-**[Lea Duempelmann](https://github.com/DuempelmannLea)**
-**[Shaoline Sheppard](https://github.com/)**
-**[Angelo Duo](https://github.com/)**
-Dennis Goehlsdorf
-**[Sukalp Muzumdar](https://github.com/)**
-**[Ryan Lusby](https://github.com/)**
-**[Sarah Carl](https://github.com/)**
+**[Lea Duempelmann](https://github.com/DuempelmannLea)**,
+**[Shaoline Sheppard](https://github.com/Shaoline)**,
+**[Angelo Duo](https://github.com/duoa)**,
+Dennis Goehlsdorf,
+Sukalp Muzumdar,
+Ryan Lusby,
+Sarah Carl
 
 ### **Acknowledgment**
 We would like to acknowledge the additional authors of the accompanying publication for their invaluable contributions to this project:
