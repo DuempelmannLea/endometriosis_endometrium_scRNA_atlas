@@ -1,2 +1,0 @@
-NAMESPACE=endo
-PIPELINE=endo
