@@ -7,6 +7,14 @@ library(patchwork)
 library(Seurat)
 options(stringsAsFactors = FALSE)
 
+
+#dir_out <- "/home/common/data/output/projects/ENDO/E044/A087/"
+#dir.create(paste0(dir_out,"output/"), recursive = TRUE)
+#setwd(dir_out)
+# data <- /home/common/data/output/projects/ENDO/E044/A033/EndoAtlas_GEO_complete.rds
+# meta <- readRDS("/home/duempelmann/analysis-projects/ENDO/E044/A085/endometriosis_endometrium_scRNA_atlas/_Data/EndoAtlas_meta.rds")
+data <- AddMetaData(data,meta)
+
 dir_out <- "CellChat/"
 setwd(dir_out)
 
@@ -18,18 +26,18 @@ setwd(dir_out)
 data  <- readRDS("ENDOatlas.rds")
 
 ##Filter Seurat for proliferative phase samples with stringet exclusion criteria and annotated cells
-samples <- unique(read.csv("DEG_samples.csv")$samples)
+DEGsamples <- unique(data@meta.data %>% filter(DEG.analysis..Figure.3a.b. == "TRUE") %>% pull(sample))
 Idents(data) <- data$sample
-data <- subset(data, idents = samples) 
-data <- subset(data, subset = Symphony_Refined_Final %in% levels(as.factor(data$Symphony_Refined_Final)))
+data <- subset(data, idents = DEGsamples) 
+data <- subset(data, subset = AnnotationRefined %in% levels(as.factor(data$AnnotationRefined)))
 
-#Filter out secretory specific cell types (no/low cell counts stop script)
+#Filter out secretory specific cell types (no/low cell counts stop script 02)
 secretory_celltypes <- c("dS3","dS4","fib C7 secretory","glandular early-secretory","mid-secretory","Prv_VSMC secretory","Prv_VSMC secretory_late","fib C7 secretory_late") 
-data <- subset(data, subset = Symphony_Refined_Final %in% setdiff(levels(as.factor(data$Symphony_Refined_Final)), secretory_celltypes))
+data <- subset(data, subset = AnnotationRefined %in% setdiff(levels(as.factor(data$AnnotationRefined)), secretory_celltypes))
 
 # Define the conditions for Case and Control
-Endo <- data@meta.data$sample %in% c(filter(data@meta.data, treatment == "Endo") %>% distinct(sample) %>% pull())
-Control <- data@meta.data$sample %in% c(filter(data@meta.data, treatment == "CTL") %>% distinct(sample) %>% pull())
+Endo <- data@meta.data$sample %in% c(filter(data@meta.data, EndometriosisStatus == "Endo") %>% distinct(sample) %>% pull())
+Control <- data@meta.data$sample %in% c(filter(data@meta.data, EndometriosisStatus == "CTL") %>% distinct(sample) %>% pull())
 
 # Create the Condition column based on Endo/Control
 data@meta.data$Condition <- NA
@@ -47,7 +55,7 @@ runCellChat <- function(CONDITION){
       seurat_sens <- subset(x = data, subset = (Condition == CONDITION))
       DimPlot(seurat_sens, group.by = "Condition")
       data.input <- GetAssayData(seurat_sens, assay = "SCT", slot = "data") # normalized data matrix
-      Idents(seurat_sens) <- seurat_sens@meta.data$Symphony_Refined_Final
+      Idents(seurat_sens) <- seurat_sens@meta.data$AnnotationRefined
       labels <- Idents(seurat_sens)
       meta <- data.frame(labels = labels, row.names = names(labels))
       meta$labels = droplevels(meta$labels, exclude = setdiff(levels(meta$labels),unique(meta$labels)))
@@ -63,7 +71,7 @@ runCellChat <- function(CONDITION){
       cellchat@DB <- CellChatDB.use
       
       # subset the expression data of signaling genes for saving computation cost
-      cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
+      cellchat <- subsetData(cellchat) 
       cellchat <- identifyOverExpressedGenes(cellchat)
       cellchat <- identifyOverExpressedInteractions(cellchat)
       
@@ -83,11 +91,14 @@ runCellChat <- function(CONDITION){
       netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
       dev.off()
       
-      saveRDS(cellchat, file = paste0(dir_out,CONDITION,"_CellChat_Symphony_Refined_Final.rds"))
+      saveRDS(cellchat, file = paste0(dir_out,CONDITION,"_CellChat_AnnotationRefined.rds"))
 }
 
-runCellChat(Endo)
-runCellChat(Control)
+runCellChat("Endo")
+runCellChat("Control")
+
+rm(data)
+gc()
 
 ####################
 ### 03. General visualization
@@ -95,7 +106,7 @@ runCellChat(Control)
 
 CellChat_visualization <- function(CONDITION){
       #Load cellchat object
-      cellchat <- readRDS(paste0(dir_out,CONDITION,"_CellChat_Symphony_Refined_Final.rds"))
+      cellchat <- readRDS(paste0(dir_out,CONDITION,"_CellChat_AnnotationRefined.rds"))
       
       #Define label order in plots
       labels.levels <- c("VSMC","Prv-STEAP4","Prv-CCL19","Prv-MYH11","fib C7","fib C7-SFRP2","eF4-CXCL14", 

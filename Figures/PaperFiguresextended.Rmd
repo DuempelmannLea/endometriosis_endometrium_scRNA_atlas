@@ -416,8 +416,91 @@ p.adjust(c(0.7639853), method = "BH", n = length(3)) #Value does not change
 Figure 3a and 3b
 ```{r}
 
-DEGs
-E044A031
+##Figure 3a
+#ENDO/E044/A033/PaperFigures.Rmd
+#Clean up!! use DEG and GO table as basis for plots
+#Barplot unique genes per main cell type
+RNAlistRDS005_df %>% 
+  select(Symphony_Global_main5, gene, stage) %>%
+  distinct() %>%
+  ggplot(aes(x = stage, fill = factor(Symphony_Global_main5, levels = c("immune", "endothelial", "epithelial", "stromal")))) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0.3))
+ggsave(paste0(dir_out,"BarPlot_DEGs_main4.pdf"), 
+       plot = last_plot(), 
+       height = 4, width = 10)
+
+
+##Figure 3b
+#Clean up!! use DEG and GO table as basis for plots
+#ENDO/E044/A031/ExtractInterestingGenesFromGProfilerA031_RNA_AveExpr18_53202.Rmd
+gProfiler_df %>% 
+  #dplyr::select(p_value, term_size, query_size, intersection_size, term_id, term_name) %>% 
+  dplyr::filter(term_size > 25 & term_size < 750) %>% #larger terms are likely to be excessively broad and prone to false positives
+  distinct(cluster_id,analysis,assay,grade,term_name, .keep_all = TRUE) %>%
+  #filter(grade == "all")  %>%
+  filter(!grepl(pattern = "HPA|HP|CORUM|MIRNA", x = term_id)) %>%
+  dplyr::arrange(p_value) %>% 
+  #dplyr::slice_head(n = 20) %>% 
+  ggplot2::ggplot() + 
+  ggplot2::aes(y = reorder(term_name, -log(p_value)), x = -log(p_value), color = grade, size = intersection_size/term_size * 100) + #, shape = ordered_query
+  ggplot2::geom_point() + 
+  #ggplot2::scale_color_continuous(name = "-Log(adj. p-value)") + 
+  ggplot2::scale_size_continuous("Intersection size / Term size * 100 (%)") + 
+  ggplot2::theme_classic() + 
+  ggplot2::xlab("-Log(adj. p-value)") + 
+  ggplot2::ylab("enriched terms") + 
+  ggplot2::ggtitle("all cells")
+ggsave(paste0(dir_out, "GOterms_all_severe.pdf"),
+  plot = last_plot(),
+  width = 14, height = 14)
+
+
+##SFig5a
+
+#ENDO/E044/A031/ExtractInterestingGenesFromGProfilerA031_RNA_AveExpr18_53202.Rmd
+#Clean up!! use DEG and GO table as basis for plots
+
+#RNA assay DEGs from proliferative samples
+RNAlistRDS005_df <- read.csv("/home/common/data/output/projects/ENDO/E044/A031/RNAlistRDS005_unmerged.csv") %>%
+  filter(annotation_reference == "Tan") %>%
+  filter(AveExpr > 18.53202)
+##Exclude Haemoglobin genes, mitochondrial genes, #ribosomal genes
+hb.genes <- c("HBA1","HBA2","HBB","HBG2","HBG1","HBD","HBE1","HBZ")#haemoglobin genes, there are no hb genes in the DEG list
+mt.genes <- grep("^MT-", RNAlistRDS005_df$gene, value=TRUE)#mitochondrial genes, no genes
+rb.genes <- grep(pattern = "^RP[SL]", RNAlistRDS005_df$gene, value=TRUE)#ribosomal genes, 165 genes
+RNAlistRDS005_df <- RNAlistRDS005_df %>%
+  dplyr::filter(!gene %in% rb.genes) #Focus on protein coding genes
+
+#Mutate so each row contains only a single gene in the "gene" column
+gProfiler_df <- gProfiler_df %>%
+  mutate(gene = strsplit(intersection, ",")) %>%
+  unnest(gene) %>%
+  dplyr::rename(stage = grade) %>%
+  dplyr::filter(assay == "RNA")
+
+
+#Mutate so each row contains only a single gene in the "gene" column
+gProfiler_df <- gProfiler_df %>%
+  dplyr::filter(!is.na(DEG_category))
+table(gProfiler_df$term_name,gProfiler_df$cluster_id)
+
+table <- left_join(gProfiler_df, RNAlistRDS005_df[,c("gene","logFC","AveExpr","p_adj.loc","cluster_id","stage")], by = c("gene","cluster_id","stage"))
+
+#x = -log(p_adj.loc)
+table %>%
+  arrange(DEG_category) %>%
+  #dplyr::filter(term_name == "extracellular organelle") %>%
+  ggplot2::ggplot() + 
+  ggplot2::aes(y = reorder(gene, -log(logFC)), x = -log(p_adj.loc), color = stage, size = logFC) + 
+  ggplot2::geom_point() + 
+  ggplot2::scale_size_continuous("logFC") + 
+  ggplot2::scale_x_continuous(limits = c(1, 6)) +
+  ggplot2::theme_classic() +
+  ggplot2::facet_wrap(~term_name, scales = "free_y", ncol = 13) +
+  ggplot2::theme(strip.text = ggplot2::element_text(size = 8))
+ ggsave(filename = paste0(dir_out, 'DotPlot_DEGcategories_DEGs_logFC_pval.pdf'), width =25,height=12)
+
 
 
 
