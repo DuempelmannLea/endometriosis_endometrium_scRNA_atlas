@@ -131,5 +131,5 @@ CellChat_visualization <- function(CONDITION){
       }
 }
 
-CellChat_visualization(Endo)
-CellChat_visualization(Control)
+CellChat_visualization("Endo")
+CellChat_visualization("Control")
