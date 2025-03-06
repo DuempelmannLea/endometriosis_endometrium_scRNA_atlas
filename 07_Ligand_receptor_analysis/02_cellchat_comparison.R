@@ -6,7 +6,7 @@ library(CellChat)
 library(paFibroblastshwork)
 options(stringsAsFactors = FALSE)
 
-dir_out <- "A076/"
+dir_out <- '/endometriosis_endometrium_scRNA_atlas/_Data/07_Ligand_receptor_analysis'
 
 
 ####################################

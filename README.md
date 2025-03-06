@@ -12,10 +12,7 @@ Tracing Endometriosis: Coupling deeply phenotyped, single-cell based Endometrial
 
 ### **Publication Abstract**
 
-Endometriosis, affecting 1 in 9 women, presents treatment and diagnostic challenges. To address these issues, we generated the biggest single-cell atlas of endometrial tissue to date, comprising 466,371 cells from 35 endometriosis and 25 non-endometriosis patients without exogenous hormonal treatment. 
-Detailed analysis reveals significant gene expression changes and altered receptor-ligand interactions present in the endometrium of endometriosis patients, including increased inflammation, adhesion, proliferation, cell survival, and angiogenesis in various cell types. 
-These alterations may enhance endometriosis lesion formation and offer novel therapeutic targets. Using ScaiVision, we developed neural network models predicting endometriosis of varying disease severity (median AUC = 0.83), including an 11-gene signature-based model (median AUC = 0.83) for hypothesis-generation without external validation. 
-In conclusion, our findings illuminate numerous pathway and ligand-receptor changes in the endometrium of endometriosis patients, offering insights into pathophysiology, targets for novel treatments, and diagnostic models for enhanced outcomes in endometriosis management.
+Endometriosis, affecting 1 in 9 women, presents treatment and diagnostic challenges. To address these issues, we generated the biggest single-cell atlas of endometrial tissue to date, comprising 466,371 cells from 35 endometriosis and 25 non-endometriosis patients without exogenous hormonal treatment. Detailed analysis reveals significant gene expression changes and altered receptor-ligand interactions present in the endometrium of endometriosis patients, including increased inflammation, adhesion, proliferation, cell survival, and angiogenesis in various cell types. These alterations may enhance endometriosis lesion formation and offer novel therapeutic targets. Using ScaiVision, we trained neural network models to predict endometriosis of varying disease severity (median AUC = 0.83) including one model based solely on a set of  11 genes confirmed as dysregulated in endometriosis patients through differential expression analysis. Our models, while not yet externally validated, can serve as a tool for hypothesis generation as well as a starting point for further clinical development. In conclusion, our findings illuminate numerous pathway and ligand-receptor changes in the endometrium of endometriosis patients, offering insights into pathophysiology, targets for novel treatments, and predictive models for enhanced outcomes in endometriosis management.
 
 ### **Link to Publication**
 Will be integrated upon publication
@@ -31,10 +28,10 @@ To install Project Title, follow these steps:
 
 1. Clone the repository: 
     ```{bash}
-    cd /path/for/code
+    cd {path to save code}
     git clone https://github.com/DuempelmannLea/endometriosis_endometrium_scRNA_atlas.git
     ```
-2. Link data objects:
+2. All processed data is stored in the GSE111976. To reproduce the analysis, download the data and link it to the _Data folder within the endometriosis_endometrium_scRNA_atlas code repository:
     ```{bash}
     cd endometriosis_endometrium_scRNA_atlas/_Data
     ln -s /path/to/EndoAtlas.rds EndoAtlas.rds
