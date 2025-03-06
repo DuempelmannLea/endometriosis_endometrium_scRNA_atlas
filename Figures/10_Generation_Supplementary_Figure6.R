@@ -26,19 +26,74 @@ source('./common_functions.R')
 ##  Figure 6.a
 ## ---------------------------------- ##
 
-## to do lea 
+# @Lea to check 
+#Supplementary Data Figure 6a
+# reshape df
+melted_meta <- melt(meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+## create the bar plot for endo_EndometriosisGrade
+SFig6a <- ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
+  geom_bar(position = "stack", width = 0.7) +
+  facet_wrap(~ fct_rev(value), ncol = 2) +
+  labs(title = "Bar Plot of Samples by Endo EndometriosisGrade",
+       x = "Fold",
+       y = "Number of Samples") +
+  scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
+  theme_minimal() +
+  coord_flip()
 
 ## ---------------------------------- ##
 ##  Figure 6.b
 ## ---------------------------------- ##
 
-## to do lea 
+# @lea to check 
+#Supplementary Data Figure 6b
+SFig6b <- ggplot(melted_meta, aes(x = variable, fill = lane)) +
+  geom_bar(position = "stack", width = 0.7) +
+  facet_wrap(~ fct_rev(value), ncol = 2) +
+  labs(title = "Bar Plot of Samples by lane",
+       x = "Fold",
+       y = "Number of Samples") +
+  #scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
+  theme_minimal() +
+  coord_flip()
+SFig6b
 
 ## ---------------------------------- ##
 ##  Figure 6.c
 ## ---------------------------------- ##
 
-## to do lea 
+#@lea to check 
+#Supplementary Data Figure 6c
+
+metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
+metadata$new_column <- NULL
+metadata$batch <- NULL
+
+
+# Remove 'names' column as it will be used as row labels
+row_names <- metadata$names
+metadata <- metadata[, -1]
+
+# Convert non-numeric columns to factors
+metadata[, c("EndometriosisStatus", "lane",  "endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
+
+
+
+# Create heatmap using ComplexHeatmap
+pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap.pdf"), width = 7, height = 9)
+Heatmap(metadata,
+        name = "Metadata",
+        row_names_side = "left",
+        row_names_gp = gpar(fontsize = 8),
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        show_column_names = TRUE,
+        show_row_names = TRUE,
+        column_title = "Columns",
+        row_title = "Row Names",
+        heatmap_legend_param = list(title = "Legend")
+)
+dev.off()
 
 ## ---------------------------------- ##
 ##  Figure 6.d

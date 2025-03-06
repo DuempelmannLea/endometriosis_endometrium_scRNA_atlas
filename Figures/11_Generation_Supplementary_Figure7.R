@@ -22,19 +22,41 @@ input_path <- '../Tables'
 source('./common_functions.R')
 
 ## ---------------------------------- ##
-##  Figure 6.a
+##  Figure 7.a
 ## ---------------------------------- ##
 
-## TO do lea 
+##@Lea check 
+#LTs annotation for cycling fibroblasts
+data <- readRDS("/home/common/data/output/projects/ENDO/E031/A004/proliferative_SCT_percent.mt_sample_integration_batch_hvg_annotated.RDS")
+meta <- data@meta.data
+rm(data)
+gc()
+table(meta$Annotation, meta$EndometriosisStatus)
+
+#Make cell id compatible with new data set
+meta$cell_id <- paste(meta$sample, meta$cell.names, sep = '_')
+rownames(meta) <- meta$cell_id
+
+#Load entire dataset and add LTs annotation
+data_ds <- readRDS("/home/common/data/output/projects/ENDO/E044/A033/dataA003A033_downsampled.rds")
+data_ds <- AddMetaData(data_ds,meta[,c("Annotation", "scds.cxds.score")])
+DimPlot(data_ds_new,group.by = "Annotation")
+
+#Highlight cycling fibroblasts
+Idents(data_ds) <- data_ds$Annotation
+table(data_ds$Annotation)
+cyclingfibs <- WhichCells(data_ds, idents = c("Cycling Fibroblasts"))
+DimPlot(data_ds, reduction = "umap", cells.highlight = cyclingfibs, cols.highlight = c("darkred"), cols= "grey", raster = FALSE)
+
 
 ## ---------------------------------- ##
-##  Figure 6.b
+##  Figure 7.b
 ## ---------------------------------- ##
 
 # this figure represent a scheme and was done manually 
 
 ## ---------------------------------- ##
-##  Figure 6.c
+##  Figure 7.c
 ## ---------------------------------- ##
 
 #1. Get plot for evaluation
@@ -52,7 +74,7 @@ list_plot_evaluation_auc <- lapply(list_plot_evaluation_auc,function(x){x + ggti
 plot_grid(plotlist = c(list_plot_evaluation_auc),nrow = 1)
 
 ## ---------------------------------- ##
-##  Figure 6.d
+##  Figure 7.d
 ## ---------------------------------- ##
 
 validation_auc_cf <- read.csv(file.path(input_path,'Performance_cycling_fibroblasts_signature_confirmation.csv')) 
@@ -60,7 +82,7 @@ validation_auc_cf$dimred <- factor(validation_auc_cf$dimred,levels = c("PCA","co
 plot_boxplot_scailyte_custom(validation_auc_cf)
 
 ## ---------------------------------- ##
-##  Figure 6.e
+##  Figure 7.e
 ## ---------------------------------- ##
 
 pca_signature <- read.csv(file.path(input_path,'PCA_cycling_fibroblast_signature.csv')) %>%
