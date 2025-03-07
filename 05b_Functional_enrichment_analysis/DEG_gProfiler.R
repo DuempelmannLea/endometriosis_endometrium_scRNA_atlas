@@ -12,8 +12,7 @@ library(cowplot)
 library(ggrepel)
 
 # define paths
-dir_out <- "/endometriosis_endometrium_scRNA_atlas/_Data/05b_Functional_enrichment_analysis/"
-path_degs_table <- ""
+dir_out <- "../_Data/05b_Functional_enrichment_analysis/"
 setwd(dir_out)
 
 ## ---------------------------------------- ##
@@ -22,7 +21,7 @@ setwd(dir_out)
 ## ---------------------------------------- ##
 
 ##Combine muscat output into one dataframe
-PATHS <- list.files(path = paste0("/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/",MenstrualCyclePhase,"_", Annotation), pattern = "mm_dream.rds", recursive = TRUE, full.names = TRUE)
+PATHS <- list.files(path = paste0("/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/Proliferative*/", pattern = "mm_dream.rds", recursive = TRUE, full.names = TRUE)
 RNAlistRDS <- lapply(PATHS, readRDS)
 names(RNAlistRDS) <- print(PATHS)
 RNAlistRDS <- unlist(RNAlistRDS, recursive = FALSE) #combine sub-lists
@@ -91,7 +90,7 @@ run_go_enrichment <- function(query){
 }
 
 go_enrichment_df <- lapply(degs_list,run_go_enrichment(degs_df))
-write.csv(go_enrichment_df,file = file.path(dir_out,'GO_enrichment_summary.csv'),quote=F,row.names=F) # @Lea to add the name of the table if saved 
+write.csv(go_enrichment_df,file = file.path(dir_out,'GO_enrichment_summary.csv'),quote=F,row.names=F)
 
 ##--------------------------------##
 ## Generate summary plot 
@@ -110,7 +109,7 @@ go_enrichment_df %>%
   ggplot2::ylab("enriched terms") + 
   ggplot2::ggtitle("all cells")
 
-ggsave(paste0(dir_out, "GOterms_all_severe.pdf"), # @Lea to add the name of the table if saved 
+ggsave(paste0(dir_out, "GO_enrichment_plot.pdf"),
        plot = last_plot(),
        width = 14, height = 14)
 
