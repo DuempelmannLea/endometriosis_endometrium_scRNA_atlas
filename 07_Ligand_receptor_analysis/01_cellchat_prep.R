@@ -7,13 +7,9 @@ library(patchwork)
 library(Seurat)
 options(stringsAsFactors = FALSE)
 
-
-dir_out <- "/endometriosis_endometrium_scRNA_atlas/_Data/07_Ligand_receptor_analysis"
+path_seurat_object <- "../_Data/EndoAtlas.rds"
+dir_out <- "../_Data/07_Ligand_receptor_analysis/"
 dir.create(paste0(dir_out,"output/"), recursive = TRUE)
-setwd(dir_out)
-
-path_seurat_object <- "/endometriosis_endometrium_scRNA_atlas/_Data/ENDO_global.rds"
-dir_out <- "CellChat/"
 setwd(dir_out)
 
 ####################
@@ -24,7 +20,7 @@ setwd(dir_out)
 data  <- readRDS(path_seurat_object)
 
 ##Filter Seurat for proliferative phase samples with stringet exclusion criteria and annotated cells
-DEGsamples <- unique(data@meta.data %>% filter(DEG.analysis..Figure.3a.b. == "TRUE") %>% pull(sample))
+DEGsamples <- unique(data@meta.data %>% filter(DEG.analysis..Figure.3a.b == "TRUE") %>% pull(sample))
 Idents(data) <- data$sample
 data <- subset(data, idents = DEGsamples) 
 data <- subset(data, subset = AnnotationRefined %in% levels(as.factor(data$AnnotationRefined)))

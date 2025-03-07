@@ -6,7 +6,7 @@ library(CellChat)
 library(paFibroblastshwork)
 options(stringsAsFactors = FALSE)
 
-dir_out <- '/endometriosis_endometrium_scRNA_atlas/_Data/07_Ligand_receptor_analysis'
+dir_out <- '../_Data/07_Ligand_receptor_analysis/'
 
 
 ####################################
@@ -70,7 +70,7 @@ gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
 gk2 <- rankNet(cellchat, mode = "comparison", stacked = F, do.stat = TRUE)
 gk1 + gk2
 ggsave(plot = gk1 + gk2,
-       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
+       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12) #For paper without previous cell type filtering
 
 ####################################
 #### Plot candidate pathways
