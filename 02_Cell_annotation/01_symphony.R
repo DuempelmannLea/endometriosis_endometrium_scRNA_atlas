@@ -4,17 +4,19 @@
 
 # load packages
 suppressPackageStartupMessages({
-  source('/endometriosis_endometrium_scRNA_atlas/02_Cell_annotation/01_libs.R')# imports
+  source('../02_Cell_annotation/01_libs.R')# imports
 }) 
 
 #source utils
-source('/endometriosis_endometrium_scRNA_atlas/02_Cell_annotation/01_utils.R') # color definitions, symphony function and plotting functions
-
+source('../02_Cell_annotation/01_utils.R') # color definitions, symphony function and plotting functions
 
 
 ########################################################
 ##### 01. Run Symphony on entire EndoAtlas
 #######################################################
+
+#create first following symbolic link in Linux environment:
+#ln -s ../_Data/EndoAtlas.rds ../_Data/02_Cell_annotation/ENDO_global.rds
 
 #00 global annotation
 symphony(
@@ -28,7 +30,7 @@ symphony(
 #######################################################
 
 #Load integrated EndoAtlas
-data <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/02_Cell_annotation/ENDO_global.rds")
+data <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/EndoAtlas.rds")
 Idents(data) <- data$AnnotationMain
 
 # Define the vector of annotations
@@ -38,7 +40,7 @@ for (annotation in ANNOTATIONMAIN) {
   # Subset data based on the current annotation
   AnnotationMain_subset <- subset(data, idents = annotation)
   # Save the subsetted data to an RDS file
-  saveRDS(AnnotationMain_subset, paste0("/endometriosis_endometrium_scRNA_atlas/_Data/02_Cell_annotation/", annotation, ".rds"))
+  saveRDS(AnnotationMain_subset, paste0("../_Data/02_Cell_annotation/ENDO_",annotation,".rds"))
 }
 
 

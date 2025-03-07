@@ -9,8 +9,7 @@ library(Seurat)
 
 
 ##Set paths
-dir_ENDO <- "/endometriosis_endometrium_scRNA_atlas/"
-dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
+dir_out <- "../_Data/03_PCA_analysis/")
 dir.create(dir_out, recursive = TRUE)
 
 
@@ -18,7 +17,7 @@ dir.create(dir_out, recursive = TRUE)
 ### Load Data
 ###############################################
 ##Load Data
-EndoAtlas <- readRDS(paste0(dir_ENDO, "_Data/EndoAtlas.rds"))
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds"))
 
 
 ###############################################

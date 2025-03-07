@@ -14,7 +14,7 @@ suppressPackageStartupMessages({
 })
 
 # load split seurat object
-seurat_obj_split_input <- readRDS("./seurat_obj_split.rds")
+seurat_obj_split_input <- readRDS("../_Data/01_Atlas_generation/Integration_epithelial_only/seurat_obj_split.rds")
 print("input loaded")
 
 # specify output directory
@@ -69,12 +69,8 @@ integrated_data <- RunPCA(object = integrated_data,
 # Run UMAP
 integrated_data <- RunUMAP(integrated_data,  dims = 1:30, seed.use = seed)
 
-#Save seurat
-#integrated_data_diet <- Seurat::DietSeurat(integrated_data, assays = c("SCT","integrated"),
-#                                      dimreducs = c("pca", "umap"))
-
 # Save the filtered, normalized and integrated data
-saveRDS(integrated_data, "./seurat_integrated.rds")
+saveRDS(integrated_data, "../_Data/01_Atlas_generation/Integration_epithelial_only/epithelial_cells.rds")
 print("saved seurat_integrated.rds")
 
 sessionInfo()

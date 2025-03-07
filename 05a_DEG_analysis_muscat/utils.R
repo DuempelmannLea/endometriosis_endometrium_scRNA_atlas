@@ -3,7 +3,7 @@
 ####################################
 
 ##Set paths
-dir_out <- paste0("/endometriosis_endometrium_scRNA_atlas/_Data/05a_DEG_analysis_muscat/")
+dir_out <- paste0("../_Data/05a_DEG_analysis_muscat/")
 dir.create(dir_out, recursive = TRUE, showWarnings = FALSE)
 
 
@@ -14,7 +14,7 @@ DEGanalysis_muscat <- function(MenstrualCyclePhase, Annotation) {
 ####################################
 
 ##load seurat object 
-data <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/EndoAtlas.rds")
+data <- readRDS("../_Data/EndoAtlas.rds")
 print("loaded data")
 
 ##Subset samples by menstrual cycle phase
@@ -42,13 +42,13 @@ if (MenstrualCyclePhase == "Secretory") {
 }
 
 ##Rename required Annotation to 'Annotation'
-if (MenstrualCyclePhase == "AnnotationMain") {
+if (Annotation == "AnnotationMain") {
   data$Annotation <- data$AnnotationMain
 }
-if (MenstrualCyclePhase == "AnnotationRefined") {
+if (Annotation == "AnnotationRefined") {
   data$Annotation <- data$AnnotationRefined
 }
-if (MenstrualCyclePhase == "AnnotationUnited") {
+if (Annotation == "AnnotationUnited") {
   data$Annotation <- data$AnnotationUnited
 }
 

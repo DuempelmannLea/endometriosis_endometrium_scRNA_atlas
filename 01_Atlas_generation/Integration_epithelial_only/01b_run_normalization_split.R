@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 
 
 # load seurat object
-seurat_obj <- readRDS(./seurat.rds)
+seurat_obj <- readRDS("../_Data/EndoAtlas.rds")
 
 # Subset epithelial cells
 Idents(seurat_obj) <- seurat_obj@meta.data$AnnotationMain
@@ -44,6 +44,6 @@ seurat_obj <- SCTransform(seurat_obj,
 seurat_obj_split <- SplitObject(seurat_obj, split.by = "batch")
 
 # save split seurat object
-saveRDS(seurat_obj_split, "./seurat_obj_split.rds")
+saveRDS(seurat_obj_split, "../_Data/01_Atlas_generation/Integration_epithelial_only/seurat_obj_split.rds")
 sessionInfo()
 date()

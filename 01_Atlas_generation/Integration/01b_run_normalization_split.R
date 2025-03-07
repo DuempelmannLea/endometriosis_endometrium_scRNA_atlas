@@ -12,7 +12,7 @@ suppressPackageStartupMessages({
 
 
 # load seurat object
-seurat_obj <- readRDS(./seurat.rds)
+seurat_obj <- readRDS(../_Data/01_Atlas_generation/AlevinQC/seurat.rds)
 Idents(seurat_obj) <- seurat_obj@meta.data$sample
 
 ####################################
@@ -32,6 +32,6 @@ seurat_obj <- SCTransform(seurat_obj,
 seurat_obj_split <- SplitObject(seurat_obj, split.by = "batch")
 
 # save split seurat object
-saveRDS(seurat_obj_split, "./seurat_obj_split.rds")
+saveRDS(seurat_obj_split, "../_Data/01_Atlas_generation/Integration/seurat_obj_split.rds")
 sessionInfo()
 date()

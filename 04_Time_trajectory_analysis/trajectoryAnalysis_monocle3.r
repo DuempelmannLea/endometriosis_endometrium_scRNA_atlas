@@ -14,8 +14,8 @@ library(dplyr)
 library(ggplot2)
 
 ##Set paths
-analysisFolder <- "endometriosis_endometrium_scRNA_atlas/_Data/04_Time_trajectory_analysis/"
-rawData <- "/endometriosis_endometrium_scRNA_atlas/_Data/01_Atlas_generation/Integration_epithelial_only/EndoAtlas_epithelial.rds"
+analysisFolder <- "../_Data/04_Time_trajectory_analysis/"
+rawData <- "../_Data/01_Atlas_generation/Integration_epithelial_only/epithelial_cells.rds"
 metadataFile <- ""
 subsetClusters <- c()  
 #-------------
@@ -27,25 +27,25 @@ data <- readRDS(rawData)
 
 if(metadataFile != ""){
   metadata <- readRDS(metadataFile)
-  data@meta.data$Symphony_Refined <- metadata[rownames(data@meta.data), "Symphony_Refined"]
-  data@meta.data$CyclePhase <- metadata[rownames(data@meta.data), "CyclePhase"]
+  data@meta.data$AnnotationRefined <- metadata[rownames(data@meta.data), "AnnotationRefined"]
+  data@meta.data$MenstrualCyclePhase <- metadata[rownames(data@meta.data), "MenstrualCyclePhase"]
   data@meta.data$CycleDay <- metadata[rownames(data@meta.data), "CycleDay"]
 }
 
 #Plots
 DefaultAssay(data) <- "SCT"
-Idents(data) <- data@meta.data$Symphony_Refined
+Idents(data) <- data@meta.data$AnnotationRefined
 
-pdf(paste0(analysisFolder, "/", out, "/UMAP_Symphony_Refined.pdf"))
-  DimPlot(data, reduction = "umap", label=TRUE, group.by="Symphony_Refined") + labs(title="Symphony_Refined")
+pdf(paste0(analysisFolder, "/", out, "/UMAP_AnnotationRefined.pdf"))
+  DimPlot(data, reduction = "umap", label=TRUE, group.by="AnnotationRefined") + labs(title="AnnotationRefined")
 dev.off()
 
 pdf(paste0(analysisFolder, "/", out, "/UMAP_CycleDay.pdf"))
   DimPlot(data, reduction = "umap", label=TRUE, group.by="CycleDay") + labs(title="CycleDay")
 dev.off()
 
-pdf(paste0(analysisFolder, "/", out, "/UMAP_CyclePhase.pdf"))
-  DimPlot(data, reduction = "umap", label=TRUE, group.by="CyclePhase") + labs(title="CyclePhase")
+pdf(paste0(analysisFolder, "/", out, "/UMAP_MenstrualCyclePhase.pdf"))
+  DimPlot(data, reduction = "umap", label=TRUE, group.by="MenstrualCyclePhase") + labs(title="MenstrualCyclePhase")
 dev.off()
 
 
@@ -86,8 +86,8 @@ plot_cells(data_monocl, color_cells_by="CycleDay",
            group_label_size=4, cell_size=1,trajectory_graph_segment_size=2,graph_label_size=3)
 dev.off()
 
-pdf(paste0(analysisFolder, "/",out2, "/trajectory_CyclePhase.pdf"), width = 10, height = 10)
-plot_cells(data_monocl, color_cells_by="CyclePhase",
+pdf(paste0(analysisFolder, "/",out2, "/trajectory_MenstrualCyclePhase.pdf"), width = 10, height = 10)
+plot_cells(data_monocl, color_cells_by="MenstrualCyclePhase",
            label_groups_by_cluster=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
            group_label_size=4, cell_size=1,trajectory_graph_segment_size=2,graph_label_size=3)
 dev.off()
@@ -98,7 +98,7 @@ saveRDS(data_monocl, paste0(analysisFolder, "/", out2, "/trajectory.rds"))
 data_monocl <- order_cells(data_monocl)
 out2 <- paste0(out, "/trajectory_day5-6-7_greenCircle")
 dir.create(paste0(analysisFolder, "/", out2))
-saveRDS(data_monocl, paste0(analysisFolder, "/", out2, "/trajectory_timepoint0.rds"))
+saveRDS(data_monocl, "../_Data/epithelial_cells_monocle3.rds")
 
 pdf(paste0(analysisFolder, "/", out2, "/trajectory_pseudotime.pdf"), width = 10, height = 10)
   plot_cells(data_monocl, color_cells_by = "pseudotime",
@@ -181,12 +181,12 @@ pheatmap::pheatmap(agg_mat,
 dev.off()
 
 # associate ciclyPhase with module
-cluster_CyclePhase <- data.frame(cell = row.names(colData(data_monocl)),
-                               CycleDay_group = colData(data_monocl)$CyclePhase)
-agg_mat <- aggregate_gene_expression(data_monocl, gene_module_df, cluster_CyclePhase)
+cluster_MenstrualCyclePhase <- data.frame(cell = row.names(colData(data_monocl)),
+                               CycleDay_group = colData(data_monocl)$MenstrualCyclePhase)
+agg_mat <- aggregate_gene_expression(data_monocl, gene_module_df, cluster_MenstrualCyclePhase)
 row.names(agg_mat) <- paste0("Module ", row.names(agg_mat))
 
-pdf(paste0(analysisFolder, "/", out2, "/modules-CyclePhase_heatmap.pdf"), width = 10, height = 10)
+pdf(paste0(analysisFolder, "/", out2, "/modules-MenstrualCyclePhase_heatmap.pdf"), width = 10, height = 10)
 pheatmap::pheatmap(agg_mat,
                    scale="column",
                    cluster_cols=FALSE,
@@ -208,9 +208,9 @@ for(module in unique(gene_module_df$module)){
                            min_expr=0.5))
   dev.off()
   
-  pdf(paste0(analysisFolder, "/", out2, "/module", module, "_ExpressionPlot_top4_CyclePhase.pdf"), width = 10, height = 10)
+  pdf(paste0(analysisFolder, "/", out2, "/module", module, "_ExpressionPlot_top4_MenstrualCyclePhase.pdf"), width = 10, height = 10)
   print(plot_genes_in_pseudotime(data_monocl[genes$id[1:4],],
-                                 color_cells_by="CyclePhase",
+                                 color_cells_by="MenstrualCyclePhase",
                                  min_expr=0.5))
   dev.off()
   
@@ -305,7 +305,7 @@ dev.off()
 
 # use Monocle to find genes that are differentially expressed according xxx ###########################
 regressionVariable <- "CycleDay"
-regressionVariable <- "CyclePhase"
+regressionVariable <- "MenstrualCyclePhase"
 
 dir.create(paste0(analysisFolder, "/", out, "/diffExpression_", regressionVariable))
 
