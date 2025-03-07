@@ -70,7 +70,7 @@ gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
 gk2 <- rankNet(cellchat, mode = "comparison", stacked = F, do.stat = TRUE)
 gk1 + gk2
 ggsave(plot = gk1 + gk2,
-       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12) #For paper without previous cell type filtering
+       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
 
 ####################################
 #### Plot candidate pathways

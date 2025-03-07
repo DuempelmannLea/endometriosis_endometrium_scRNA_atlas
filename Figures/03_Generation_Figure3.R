@@ -23,6 +23,9 @@ library(gplots)
 library(RColorBrewer)
 library(randomcoloR)
 
+dir_out <- "../_Data/Figures/"
+
+
 ## ---------------------------------- ##
 ## Figure 3.a
 ## ---------------------------------- ##
@@ -74,16 +77,13 @@ ggsave(paste0(dir_out, "GOterms_all_severe.pdf"),
 ## Figure 3.c
 ## ---------------------------------- ##
 
-CellChat
-E044A076
-#cellchat <-readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
-dir_out <- "/home/common/data/output/projects/ENDO/E044/A076/"
+cellchat <- readRDS("../_Data/07_Ligand_receptor_analysis/cellchat_CntrlvsEndo.rds")
+#without previous cell filtering
 
-#Figure 3c and Supplementary Figure 5b
 gk1 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
 gk1 
 ggsave(plot = gk1,
-       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12)
+       filename = paste0(dir_out, 'output_comparison_Refined/rankNet.pdf'), width =10,height=12) 
 
 ## ---------------------------------- ##
 ## Figure 3.d
@@ -119,8 +119,9 @@ dev.off()
 ## ---------------------------------- ##
 ## Figure 3.e
 ## ---------------------------------- ##
+
 #Load CellChat data
-cellchat <- readRDS(paste0(dir_out,"cellchat_CntrlvsEndo_Symphony_Refined_Final.rds"))
+cellchat <- readRDS("../_Data/07_Ligand_receptor_analysis/cellchat_CntrlvsEndo.rds")
 
 #Figure 3e ICAM
 netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("ICAM"), remove.isolate = FALSE) 
@@ -132,6 +133,9 @@ ggsave(plot = last_plot(),
 ## Figure 3.f
 ## ---------------------------------- ##
 
+#Load CellChat data
+cellchat <- readRDS("../_Data/07_Ligand_receptor_analysis/cellchat_CntrlvsEndo.rds")
+
 #Figure 3f CXCL
 #Load data
 netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("CXCL"), remove.isolate = FALSE) 
@@ -142,6 +146,9 @@ ggsave(plot = last_plot(),
 ## Figure 3.g
 ## ---------------------------------- ##
 
+#Load CellChat data
+cellchat <- readRDS("../_Data/07_Ligand_receptor_analysis/cellchat_CntrlvsEndo.rds")
+
 #Figure 3g VEGF
 netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("VEGF"), remove.isolate = FALSE) # sources.use = 4, targets.use = c(5:11),
 ggsave(plot = last_plot(),
@@ -150,6 +157,9 @@ ggsave(plot = last_plot(),
 ## ---------------------------------- ##
 ## Figure 3.h
 ## ---------------------------------- ##
+
+#Load CellChat data
+cellchat <- readRDS("../_Data/07_Ligand_receptor_analysis/cellchat_CntrlvsEndo.rds")
 
 #Figure 3h IGFBP
 netVisual_bubble(cellchat, comparison = c(1, 2),signaling = c("IGFBP"), remove.isolate = FALSE,targets.use = c(5:11)) 

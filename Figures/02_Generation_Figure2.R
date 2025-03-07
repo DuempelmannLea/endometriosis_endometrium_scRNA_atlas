@@ -23,11 +23,13 @@ library(gplots)
 library(RColorBrewer)
 library(randomcoloR)
 
+dir_out <- "../_Data/Figures/"
+
 ## ---------------------------------- ##
 ## Figure 2.a
 ## ---------------------------------- ##
 
-p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas.rds"))
+p <- readRDS("../_Data/03_PCA_analysis/p_EndoAtlas.rds")
 #Figure 2a
 biplot(p,
        colby = 'MenstrualCyclePhase',
@@ -45,10 +47,9 @@ biplot(p,
 ## Figure 2.b
 ## ---------------------------------- ##
 
-EndoAtlas <- readRDS("/endometriosis_endometrium_scRNA_atlas/_Data/EndoAtlas.rds")
-EndoAtlas_meta <- EndoAtlas@meta.data
-
 #Figure 2b entire atlas
+#MenstrualCyclePhase
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
 Fig2b_1
 ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
@@ -56,29 +57,34 @@ ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
        width =20, height=9)
 
 #Figure 2b epithelial cells
-#@ Lea add how this object was generated EndoAtlas_epithelial_reintegrated
-Fig2b_2 <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
+#MenstrualCyclePhase
+epithelial_cells_monocle3 <- readRDS("../_Data/epithelial_cells_monocle3.rds")
+Fig2b_2 <- plot_cells(epithelial_cells_monocle3, color_cells_by = "MenstrualCyclePhase",
+                    label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
+                    graph_label_size=3, cell_size = 1)
+ggsave(filename = paste0(dir_out, 'Fig2b_2.pdf'),
+       plot = Fig2b_2,
+       width =12, height=9)
 
 ## ---------------------------------- ##
 ## Figure 2.c
 ## ---------------------------------- ##
 
-#Figure 2c
-#@LeaLook in IBU folder for object with trajectory line or A063/A066
-
 #Figure 2c epithelial cells
-epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
-
+epithelial_cells_monocle3 <- readRDS("../_Data/epithelial_cells_monocle3.rds")
 #Pseudotime
 Fig2c <- plot_cells(epithelial_cells_monocle3, color_cells_by = "pseudotime",
                     label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
                     graph_label_size=3, cell_size = 1)
+ggsave(filename = paste0(dir_out, 'Fig2c.pdf'),
+       plot = Fig2c,
+       width =12, height=9)
 
 ## ---------------------------------- ##
 ## Figure 2.d
 ## ---------------------------------- ##
 
-#Remove samples 65 and 105, since these samples are just in between menstrual cycle phases and cannot be clearly assigned
+#Remove samples 65 and 105, since these samples are just in between periovulatory and early-secretory menstrual cycle phases and cannot be clearly assigned
 Idents(EndoAtlas) <- EndoAtlas$sample
 EndoAtlas_filtereds65s105 <- subset(EndoAtlas, subset = sample %in% setdiff(unique(EndoAtlas$sample), c("sample65", "sample105")))
 Idents(EndoAtlas_filtereds65s105) <- EndoAtlas_filtereds65s105$AnnotationMain
@@ -89,12 +95,12 @@ Idents(EndoAtlas_filtereds65s105) <- EndoAtlas_filtereds65s105$AnnotationMain
 ### main epithelial marker genes for menstrual cycle phases
 
 # Subset celltype of interest
-EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = epithelial)
+EndoAtlas_filtereds65s105_epithelial <- subset(EndoAtlas_filtereds65s105, idents = epithelial)
 #main epithelial marker genes for menstrual cycle phases
 epithelial_main <- c("SFRP4", "LAMC2", "MMP11", "MMP7", "SPRY1", "TFPI2","STEAP4","ADAMTS8","CAPN6","SLC37A2","SCGB1D2", "MT1F", "MT1X","RIMKLB", "S100P", "DEFB1","G0S2","NNMT","GPX3", "PAEP")
 
 # Do MultiBarHeatmap
-DoMultiBarHeatmap(object = data, features = epithelial_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
+DoMultiBarHeatmap(object = EndoAtlas_filtereds65s105_epithelial, features = epithelial_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
 # Save MultiBarHeatmap
 ggsave(
   filename = paste0(dir_out, epithelial, "Fig2d_epithelial_DoMultiBarHeatmap.pdf"),
@@ -105,14 +111,13 @@ ggsave(
 ##Plot our marker genes and Wang et al. 2020 marker genes (Wang et al. 2020, DOI: 10.1038/s41591-020-1040-z)
 #Wang et al. 2020 menstrual phase marker genes
 Wang_epithelial_mens_markers <- c("PLAU", "MMP7", "THBS1", "CADM1", "NPAS3", "ATP1A1", "ANK3", "ALPL", "TRAK1", "SCGB1D2", "MT1F", "MT1X", "MT1E", "MT1G", "CXCL14", "MAOA", "DPP4", "NUPR1", "GPX3", "PAEP")
-#Plot first our genes, then Wang genes
+#Plot first our markers, then Wang markers
 heatmap <- DoHeatmap(
-  object = data,
+  object = EndoAtlas_filtereds65s105_epithelial,
   features = c(setdiff(epithelial_main ,Wang_epithelial_mens_markers), Wang_epithelial_mens_markers),
   cells = NULL,
   group.by = "MenstrualCyclePhase",
   group.bar = TRUE)
-#heatmap
 ggsave(
   filename = paste0(dir_out, epithelial, "DoMultiBarHeatmap_epithelial_OursAndWangMarkers.pdf"),
   plot = last_plot(),
@@ -124,11 +129,11 @@ ggsave(
 ### main stromal marker genes for menstrual cycle phases
 
 # Subset celltype of interest
-EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = stromal) #@ Lea add the path here 
+EndoAtlas_filtereds65s105_stromal <- subset(EndoAtlas_filtereds65s105, idents = stromal)
 #main stromal marker genes for menstrual cycle phases
 stromal_main <- c("SFRP1", "H1-1", "H3C2", "WNT5A","CILP","BRINP1", "CFD","PTGDS","SLIT3","RPRM", "TIMP3", "IGFBP1","LEFTY2","LRRC15","LUM")
 # Do MultiBarHeatmap
-DoMultiBarHeatmap(object = data, features = stromal_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
+DoMultiBarHeatmap(object = EndoAtlas_filtereds65s105_stromal, features = stromal_main, group.by="MenstrualCyclePhase", additional.group.by="epithelial.pseudotime")
 # Save MultiBarHeatmap
 ggsave(
   filename = paste0(dir_out, stromal, "Fig2d_stromal_DoMultiBarHeatmap.pdf"),
@@ -139,14 +144,13 @@ ggsave(
 ##Plot our marker genes and Wang et al. 2020 marker genes (Wang et al. 2020, DOI: 10.1038/s41591-020-1040-z)
 #Wang et al. 2020 menstrual phase marker genes
 Wang_stromal_mens_markers <- c('STC1', 'NFATC2', 'BMP2' ,'PMAIP1' ,'MMP11' ,'SFRP1', 'WNT5A' ,'ZFYVE21' ,'CILP' ,'SLF2' ,'MATN2', 'S100A4' ,'DKK1' ,'CRYAB', 'FOXO1', 'IL15', 'FGF7', 'LMCD1')
-#Plot first our genes, then Wang genes
+#Plot first our markers, then Wang markers
 heatmap <- DoHeatmap(
-  object = data,
+  object = EndoAtlas_filtereds65s105_stromal,
   features = c(setdiff(stromal_main ,Wang_stromal_mens_markers), Wang_stromal_mens_markers),
   cells = NULL,
   group.by = "MenstrualCyclePhase",
   group.bar = TRUE)
-#heatmap
 ggsave(
   filename = paste0(dir_out, stromal, "DoMultiBarHeatmap_stromal_OursAndWangMarkers.pdf"),
   plot = last_plot(),
@@ -164,9 +168,9 @@ lymphocyte_main <- c("IL7R","DUSP4","MMP26","MT1G","CXCL3","CXCL2","G0S2")
 CELLTYPES <- c("endothelial","lymphocyte","myeloid") 
 for (CELLTYPE in CELLTYPES) {
   # Subset celltype of interest
-  EndoAtlas_filtereds65s105 <- subset(EndoAtlas_filtereds65s105, idents = CELLTYPE)
+  EndoAtlas_filtereds65s105_subset <- subset(EndoAtlas_filtereds65s105, idents = CELLTYPE)
   # Do MultiBarHeatmap
-  DoMultiBarHeatmap(object = EndoAtlas_filtereds65s105, 
+  DoMultiBarHeatmap(object = EndoAtlas_filtereds65s105_subset, 
                     features = if (CELLTYPE == "endothelial") endothelial_main
                     else if (CELLTYPE == "myeloid") myeloid_main
                     else if (CELLTYPE == "lymphocyte") lymphocyte_main, 
@@ -182,7 +186,7 @@ for (CELLTYPE in CELLTYPES) {
 }
 
 ###########################
-## Additional strong Menstrual cycle phase markers
+## FYI: Additional strong Menstrual cycle phase markers 
 stromal_extended <- c("H1-1","H1-2","H1-4","H1-5","H2AC13","H2Ac14","H3C2","H4C3","MKI67","TNC", #prolif/periov
                       "CALB2", "PENK","POSTN",#periovulatory
                       "CAPN6", "CYP26A1","HGD","HLA-DMB","MMP26","UPK1B","TFPI2","ENPP3","PKHD1L1","CILP","CHODL","GDF15","SCGB1D2","SCGB1D4","SCGB2A1","CERNA2","CD9",#secretory_early
@@ -199,9 +203,10 @@ lymphocyte_extended <- c("CAPN6","MT1H",  "ENPP3",  "TFPI2", "CLDN3", "DUSP4", "
 ## ---------------------------------- ##
 ## Figure 2.e
 ## ---------------------------------- ##
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 
 #Prepare data for boxplot
-df2 <- EndoAtlas_meta%>%
+df2e <- EndoAtlas@meta.data %>%
   filter(Minor.exclusion.criteria.logical == "FALSE") %>%
   group_by(sample, AnnotationMain, EndometriosisGrade, MenstrualCyclePhase_main, EndometriosisStatus) %>%
   summarise(row_count = n()) %>%
@@ -212,7 +217,7 @@ df2 <- EndoAtlas_meta%>%
   ungroup()
 
 #BoxPlots percentage, EndometriosisStatus 
-ggplot(df2, aes(x = MenstrualCyclePhase_main, y = AnnotationMain_perc, fill = EndometriosisStatus)) +
+ggplot(df2e, aes(x = MenstrualCyclePhase_main, y = AnnotationMain_perc, fill = EndometriosisStatus)) +
   geom_boxplot(outlier.shape = NA) +
   geom_point(aes(colour = EndometriosisStatus),
              colour="black",pch=21, 
@@ -227,7 +232,7 @@ ggsave(paste0(dir_out, "Fig2e_boxplot.pdf"),
 
 ###Significance testing CTL vs Endo
 # Perform t-test CTL vs Endo for each cell type grouped by AnnotationRefined, MenstrualCyclePhase_main
-df2_ttest_EndometriosisStatus <- df2 %>%
+df2e_ttest_EndometriosisStatus <- df2e %>%
   group_by(AnnotationMain, MenstrualCyclePhase_main) %>%
   summarise(p.value = t.test(AnnotationMain_perc ~ EndometriosisStatus)$p.value) %>%
   ungroup()
@@ -235,14 +240,15 @@ df2_ttest_EndometriosisStatus <- df2 %>%
 
 ###Significance testing prolif vs periov vs sec, CTL + Endo
 ## Perform t-test Prolif vs Peri for each cell type
-df2_ttest_ProlifPeri <- df2 %>%
+df2e_ttest_ProlifPeri <- df2e %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative","periovulatory")) %>%
   group_by(AnnotationMain) %>%
   summarise(p.value = t.test(AnnotationMain_perc ~ MenstrualCyclePhase_main)$p.value) %>%
   ungroup()
 #none significant
+
 ## Perform t-test Prolif vs Sec for each cell type
-df2_ttest_ProlifSec <- df2 %>%
+df2e_ttest_ProlifSec <- df2e %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("proliferative","secretory")) %>%
   group_by(AnnotationMain) %>%
   summarise(p.value = t.test(AnnotationMain_perc ~ MenstrualCyclePhase_main)$p.value) %>%
@@ -250,7 +256,7 @@ df2_ttest_ProlifSec <- df2 %>%
 #epi (0.00977) and str (0.0255) significant
 
 ## Perform t-test periovulatory vs sec for each cell type
-df2_ttest_PeriSec <- df2 %>%
+df2e_ttest_PeriSec <- df2e %>%
   dplyr::filter(MenstrualCyclePhase_main %in% c("periovulatory","secretory")) %>%
   group_by(AnnotationMain) %>%
   summarise(p.value = t.test(AnnotationMain_perc ~ MenstrualCyclePhase_main)$p.value) %>%
@@ -261,9 +267,11 @@ df2_ttest_PeriSec <- df2 %>%
 ## ---------------------------------- ##
 ## Figure 2.f
 ## ---------------------------------- ##
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
+EndoAtlas_meta <- EndoAtlas@meta.data
 
 #Early and Mid Secretory Prv_VSMCs 
-Fig2f <- EndoAtlas_meta%>%
+Fig2f <- EndoAtlas_meta %>%
   filter(Minor.exclusion.criteria.logical == "FALSE") %>%
   group_by(sample, AnnotationRefined) %>%
   summarise(AnnotationRefined_counts = n()) %>%

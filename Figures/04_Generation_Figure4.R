@@ -21,7 +21,7 @@ library(tinter)
 input_path <- '../Tables' 
 
 # source common functions 
-source('./common_functions.R')
+source('../Figures/common_functions.R')
 
 ## ---------------------------------- ##
 ##  Figure 4.b
