@@ -15,22 +15,28 @@ library(tibble)
 library(tinter)
 library(UpSetR)
 library(forcats)
+library(reshape2)
 
 # input path 
-input_path<- '../Tables' 
-  
+input_path <- '../Tables/' 
+
+#output path
+dir_out <- "../_Data/Figures/"
+
 # source common functions 
 source('./common_functions.R')
 
 ## ---------------------------------- ##
-##  Figure 6.a
+##  Supplementary Data Figure 6.a
 ## ---------------------------------- ##
 
-# @Lea to check 
-#Supplementary Data Figure 6a
+#Load data
+ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
+
 # reshape df
-melted_meta <- melt(meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
-## create the bar plot for endo_EndometriosisGrade
+melted_meta <- melt(ScaiNET_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+
+# barplot and save
 SFig6a <- ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
@@ -40,48 +46,49 @@ SFig6a <- ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
   scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
   theme_minimal() +
   coord_flip()
+ggsave(filename = paste0(dir_out, 'SFig6a.pdf'),
+       plot = SFig6a,
+       width =12, height=7)
 
 ## ---------------------------------- ##
-##  Figure 6.b
+##  Supplementary Data Figure 6.b
 ## ---------------------------------- ##
+#Load data
+ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
 
-# @lea to check 
-#Supplementary Data Figure 6b
+# reshape df
+melted_meta <- melt(ScaiNET_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+
+# barplot and save
 SFig6b <- ggplot(melted_meta, aes(x = variable, fill = lane)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
   labs(title = "Bar Plot of Samples by lane",
        x = "Fold",
        y = "Number of Samples") +
-  #scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
   theme_minimal() +
   coord_flip()
-SFig6b
+ggsave(filename = paste0(dir_out, 'SFig6b.pdf'),
+       plot = SFig6b,
+       width =12, height=7)
 
 ## ---------------------------------- ##
-##  Figure 6.c
+##  Supplementary Data Figure 6.c
 ## ---------------------------------- ##
 
-#@lea to check 
-#Supplementary Data Figure 6c
-
-metadata <- read.csv('/home/common/data/output/projects/ENDO/E042/A001/summary_plots_cv_splits/metadata_prolif_eval_fold_all.csv')
-metadata$new_column <- NULL
-metadata$batch <- NULL
-
+#Load data
+ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
 
 # Remove 'names' column as it will be used as row labels
-row_names <- metadata$names
-metadata <- metadata[, -1]
+rownames(ScaiNET_meta) <- ScaiNET_meta$names
 
 # Convert non-numeric columns to factors
-metadata[, c("EndometriosisStatus", "lane",  "endo_EndometriosisGrade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(metadata[, c("EndometriosisStatus", "lane", "endo_EndometriosisGrade", "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
-
+ScaiNET_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(ScaiNET_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
 
 
 # Create heatmap using ComplexHeatmap
-pdf(paste0(dir_out, "metadata_prolif_eval_fold_all_heatmap.pdf"), width = 7, height = 9)
-Heatmap(metadata,
+pdf(paste0(dir_out, "SFig6c_ScaiNET_meta.pdf"), width = 7, height = 9)
+Heatmap(ScaiNET_meta,
         name = "Metadata",
         row_names_side = "left",
         row_names_gp = gpar(fontsize = 8),
@@ -96,7 +103,7 @@ Heatmap(metadata,
 dev.off()
 
 ## ---------------------------------- ##
-##  Figure 6.d
+##  Supplementary Data Figure 6.d
 ## ---------------------------------- ##
 
 output_proba_best_learners_corrgpca <- read.csv(file.path(input_path,'output_probabilities_sample_corrgpca.csv'))
@@ -107,7 +114,7 @@ output_proba_best_learners_corrgpca <- output_proba_best_learners_corrgpca %>%
 plot_violin(data = output_proba_best_learners_corrgpca,
             y_variable='median_output_probability')
 ## ---------------------------------- ##
-##  Figure 6.e
+##  Supplementary Data Figure 6.e
 ## ---------------------------------- ##
 
 pca_signature <- read.csv(file.path(input_path,'SupplementaryTable6_PCAsignature.csv')) %>%
@@ -121,7 +128,7 @@ list_signatures <- list(CorrgPCA = corrgpca_signature,
 upset(fromList(list_signatures), order.by = "freq",text.scale = 2)
 
 ## ---------------------------------- ##
-##  Figure 6.f
+##  Supplementary Data Figure 6.f
 ## ---------------------------------- ##
 
 ## Predictive score for each of the genes of the 11 gene signature 

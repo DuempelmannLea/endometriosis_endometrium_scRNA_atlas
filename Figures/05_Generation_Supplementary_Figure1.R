@@ -16,14 +16,18 @@ library(tinter)
 library(UpSetR)
 library(forcats)
 
+# set dir_out
+dir_out <- "../_Data/Figures/"
 
 ## ---------------------------------- ##
 ##  Figure 1.a & b 
 ## ---------------------------------- ##
 
-#Supplementary Data Figure 1a and 1b
-#CODE OK
+#Load data
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
+EndoAtlas_meta <- EndoAtlas@meta.data
 
+#Plot and save
 VlnPlot(EndoAtlas,
         features = c("nFeature_RNA", "nCount_RNA","nCount_SCT","nFeature_SCT"),
         group.by='EndometriosisStatus', ncol = 1, pt.size=0)
@@ -58,56 +62,59 @@ median_summary <- EndoAtlas_meta %>%
   )
 
 ## ---------------------------------- ##
-##  Figure 1.c
+##  Supplementary Data Figure 1.c
 ## ---------------------------------- ##
 
-#Supplementary Data Figure 1c
-#CODE OK
+#Load data
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 
+#Plot and save
 SFig1c <- FeaturePlot(EndoAtlas, features = "CycleDay", raster = FALSE)
+ggsave(filename = paste0(dir_out, 'SFig1c.pdf'),
+       plot = SFig1c,
+       width =20, height=9)
 
 ## ---------------------------------- ##
-##  Figure 1.d
+##  Supplementary Data Figure 1.d
 ## ---------------------------------- ##
 
-#Supplementary Data Figure 1d
-#CODE OK
+#Load data
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 
+#Plot and save
 SFig1d <- FeaturePlot(EndoAtlas, features = "ProgesteroneSerum", raster = FALSE)
-
+ggsave(filename = paste0(dir_out, 'SFig1d.pdf'),
+       plot = SFig1d,
+       width =20, height=9)
 
 ## ---------------------------------- ##
-##  Figure 1.e
+##  Supplementary Data Figure 1.e
 ## ---------------------------------- ##
 
-dir_out <- paste0(dir_ENDO,"_Data/03_PCA_analysis/")
-
+#Load data
 p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_DEGsamples.rds"))
 
-#Figure 1e
+#Plot and save
+pdf(paste0(dir_out,"SFig1e_eigencorplot_final_BH.pdf"), width = 10, height = 5)
 eigencorplot(p,
              metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
              col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue'),
              corMultipleTestCorrection = "BH"
 )
-
+dev.off()
 
 ## ---------------------------------- ##
-##  Figure 1.f
+##  Supplementary Data Figure 1.f
 ## ---------------------------------- ##
-
-#Supplementary Data Figure 1f
-#CODE OK
-#"/home/common/data/output/projects/ENDO/E044/A082/SCTassay/" @Lea redefine path here 
 
 #Define subsets of main annotation
 subsets <- c("myeloid", "endothelial", "epithelial", "lymphocyte","stromal")
 
 #Plot eigencorplots for the main annotations
-plotting_PCA <- function(SUBSET) {
+plotting_PCA_main <- function(SUBSET) {
   p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas_",SUBSET,".rds"))
   
-  pdf(paste0(dir_out,"eigencorplot_final_BH_",SUBSET,".pdf"), width = 10, height = 5)
+  pdf(paste0(dir_out,"SFig1f_eigencorplot_final_BH_",SUBSET,".pdf"), width = 10, height = 5)
   eigencorplot(p,
                metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
                col = c('darkorange3','darkorange', 'white','cadetblue2','cadetblue'),
@@ -116,4 +123,4 @@ plotting_PCA <- function(SUBSET) {
   dev.off()
 }
 
-lapply(subsets, plotting_PCA)
+lapply(subsets, plotting_PCA_main)

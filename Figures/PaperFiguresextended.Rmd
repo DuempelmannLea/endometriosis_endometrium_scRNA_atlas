@@ -138,7 +138,7 @@ ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
        width =20, height=9)
 
 #Figure 2b epithelial cells
-Fig2b_2 <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
+Fig2b_2 <- DimPlot(epithelial_cells_monocle3, reduction = "umap", group.by = "MenstrualCyclePhase", raster = FALSE)
 Fig2b_2
 ggsave(filename = paste0(dir_out, 'Fig2b_2.pdf'),
        plot = Fig2b_2,
