@@ -10,9 +10,38 @@ suppressPackageStartupMessages({
 #source utils
 source('../02_Cell_annotation/01_utils.R') # color definitions, symphony function and plotting functions
 
+########################################################
+##### 01. Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) as annotation reference
+#######################################################
+
+####### Download data in the command line
+#cd ../_Data/02_Cell_annotation/
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_global.h5ad
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_endothelial.h5ad
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_epithelial.h5ad
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_lymphocyte.h5ad
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_myeloid.h5ad
+#wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_stromal.h5ad
+
+####### Convert .h5ad files to .h5seurat files and save as .rds
+library(SeuratDisk)
+
+# List of cell types
+cell_types <- c("global", "lymphocyte", "epithelial", "endothelial", "myeloid", "stromal")
+
+# Convert each file to h5seurat format and save as RDS
+for (cell_type in cell_types) {
+  # Convert to h5seurat
+  Convert(paste0("endo-2022_", cell_type, ".h5ad"), dest = "h5seurat", assay = "RNA", overwrite = TRUE)
+  
+  # Load data and save as RDS
+  data <- LoadH5Seurat(paste0("endo-2022_", cell_type, ".h5seurat"), assays = "RNA")
+  saveRDS(data, paste0("endo-2022_", cell_type, ".rds"))
+}
+
 
 ########################################################
-##### 01. Run Symphony on entire EndoAtlas
+##### 02. Run Symphony on entire EndoAtlas
 #######################################################
 
 #create first following symbolic link in Linux environment:
@@ -26,7 +55,7 @@ symphony(
 
 
 ########################################################
-##### 02. Save EndoAtlas split into the 5 main cell types
+##### 03. Save EndoAtlas split into the 5 main cell types
 #######################################################
 
 #Load integrated EndoAtlas
@@ -45,7 +74,7 @@ for (annotation in ANNOTATIONMAIN) {
 
 
 ########################################################
-##### 03. Run Symphony on 5 main cell types separately for refined annotation
+##### 04. Run Symphony on 5 main cell types separately for refined annotation
 #######################################################
 
 
