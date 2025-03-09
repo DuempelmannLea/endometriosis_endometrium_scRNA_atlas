@@ -38,7 +38,7 @@ EndoAtlas <- subset(EndoAtlas, subset = AnnotationMain %in% levels(as.factor(Ann
 gc()
 
 ### AnnotationMain markers
-genes_to_plot <- c("EPCAM","CDH1","PDGFRA","COL1A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2") #correct xxx
+genes_to_plot <- c("EPCAM","CDH1","PDGFRA","COL1A1", "VWF","PECAM1","PTPRC","CD68","CD14","CD2")
 pops_to_plot <- c("stromal","epithelial","myeloid","lymphocyte","endothelial")
 # DotPlot
 Seurat::DotPlot(
