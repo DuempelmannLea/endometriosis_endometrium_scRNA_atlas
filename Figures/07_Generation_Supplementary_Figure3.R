@@ -16,16 +16,16 @@ library(tinter)
 library(UpSetR)
 library(forcats)
 
+dir_out <- "../_Data/Figures/"
 
 ## ---------------------------------- ##
-##  Supplementary figure 3.a
+##  Supplementary Data Figure 3.a
 ## ---------------------------------- ##
-#Supplementary Figure 3a
-#CODE running, need to extend the PCA analysis folder
-#dir_out <- "/home/common/data/output/projects/ENDO/E044/A072/allcells_EndoAtlas_SCTassay/"
-p <- readRDS(paste0(dir_ENDO,"_Data/03_PCA_analysis/p_EndoAtlas.rds"))
 
-#Supplementary Data Figure 3a
+#Load data
+p <- readRDS("../_Data/03_PCA_analysis/p_EndoAtlas.rds")
+
+#Plot
 biplot(p,
        colby = 'EndometriosisStatus',
        labSize = 0,drawConnectors = FALSE, 
@@ -33,14 +33,13 @@ biplot(p,
        legendPosition = 'right')
 
 ## ---------------------------------- ##
-##  Supplementary figure 3.b & e
+##  Supplementary Data Figure 3.b
 ## ---------------------------------- ##
 
-#Supplementary Figure 3b and e
-#CODE running
+#Load data
 epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
 
-#Menstrual Cycle Day
+#Plot Menstrual Cycle Day
 SFig3b <- plot_cells(epithelial_cells_monocle3, color_cells_by = "CycleDay",
                      label_cell_groups=FALSE, label_leaves=FALSE, label_branch_points=FALSE,
                      graph_label_size=3, cell_size = 1)
@@ -49,6 +48,49 @@ ggsave(filename = paste0(dir_out, 'SFig3b.pdf'),
        plot = SFig3b,
        width =20, height=9)
 
+## ---------------------------------- ##
+##  Supplementary Data Figure 3.c
+## ---------------------------------- ##
+
+#Load data and clean
+SupplementaryTable1 <- read.delim("../Tables/SupplementaryTable1.txt")
+SupplementaryTable1 <- SupplementaryTable1 %>%
+  filter(!(is.na(FinalPhaseRefined) | FinalPhaseRefined == "")) %>%
+  mutate(Median_Wang_Phase_epithelial = as.factor(Median_Wang_Phase_epithelial))
+
+#Plot and save
+SFig3c <- ggplot(SupplementaryTable1, aes(x = Menstrual.cycle.day..Base.1., y = Progesterone.in.serum..nmol.L., color = FinalPhaseRefined, shape = endometriosis.status)) +
+  geom_point() +
+  geom_hline(yintercept=2, linetype="dashed", color = "dark grey") +
+  coord_trans(y="log2")
+ggsave(filename = paste0(dir_out, 'SFig3c.pdf'),
+       plot = SFig3c,
+       width =8 ,height=5)
+
+## ---------------------------------- ##
+##  Supplementary Data Figure 3.d
+## ---------------------------------- ##
+
+#Load data and clean
+SupplementaryTable1 <- read.delim("../Tables/SupplementaryTable1.txt")
+SupplementaryTable1 <- SupplementaryTable1 %>%
+  filter(!(is.na(FinalPhaseRefined) | FinalPhaseRefined == ""))
+
+#Plot and save
+SFig3d <- ggplot(SupplementaryTable1, aes(x = Menstrual.cycle.day..Base.1., y = Progesterone.in.serum..nmol.L., color = Median_Wang_Phase_epithelial, shape = endometriosis.status)) +
+  geom_point() +
+  geom_hline(yintercept=2, linetype="dashed", color = "dark grey") +
+  coord_trans(y="log2")
+ggsave(filename = paste0(dir_out, 'SFig3d.pdf'),
+       plot = SFig3d,
+       width =8 ,height=5)
+
+## ---------------------------------- ##
+##  Supplementary Data Figure 3.e
+## ---------------------------------- ##
+
+#Load data
+epithelial_cells_monocle3 <- readRDS(paste0(dir_data, "epithelial_cells_monocle3.rds"))
 
 #Menstual Cycle Phase Wang
 SFig3e <- plot_cells(epithelial_cells_monocle3 , color_cells_by = "WangMenstrualCyclePhase",
@@ -60,48 +102,29 @@ ggsave(filename = paste0(dir_out, 'SFig3e.pdf'),
        width =20, height=9)
 
 ## ---------------------------------- ##
-##  Supplementary figure 3.c
+##  Supplementary Data Figure 3.f
 ## ---------------------------------- ##
 
-#Supplementary Data Figure 3c
-#Look in IBU folder for object with trajectory line or A063/A066 @Lea
+#Load data
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 
-#Figure S3c epithelial cells
-FeaturePlot
-Fig3c <- DimPlot(EndoAtlas_epithelial_reintegrated, reduction = "umap", group.by = "MenstrualCycleDay", raster = FALSE)
-Fig3c
-ggsave(filename = paste0(dir_out, 'Fig3c.pdf'),
-       plot = Fig3c,
-       width =20, height=9)
-
-## ---------------------------------- ##
-##  Supplementary figure 3.d
-## ---------------------------------- ##
-
-# @Lea code missing 
-
-## ---------------------------------- ##
-##  Supplementary figure 3.f
-## ---------------------------------- ##
-
-#CODE OK
-#Figure 2b entire atlas
-Fig2b_1 <- DimPlot(EndoAtlas, reduction = "umap", group.by = "Wang2020Phase", raster = FALSE)
-Fig2b_1
-ggsave(filename = paste0(dir_out, 'Fig2b_1.pdf'),
-       plot = Fig2b_1,
+#Plot and save
+SFig3f <- DimPlot(EndoAtlas, reduction = "umap", group.by = "WangMenstrualCyclePhase", raster = FALSE)
+SFig3f 
+ggsave(filename = paste0(dir_out, 'SFig3f.pdf'),
+       plot = SFig3f,
        width =20, height=9)
 
 
 ## ---------------------------------- ##
-##  Supplementary figure 3.g
+##  Supplementary Data Figure 3.g
 ## ---------------------------------- ##
-
-#CODE OK
 
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
 #cd endometriosis_endometrium_scRNA_atlas/_Data
 #wget --no-check-certificate https://singlecell.jax.org/datasets/endometriosis/h5ad/endo-2022_epithelial.h5ad
+
+dir_data <- "../_Data/"
 
 ####### Convert .h5ad files to .h5seurat files
 library(SeuratDisk)
@@ -132,7 +155,7 @@ heatmap <- DoHeatmap(
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-  filename = paste0(dir_out, "Tan_epithelial_Fig2EpiMarkers.pdf"),
+  filename = paste0(dir_out, "SFig3g_Tan_epithelial_Fig2EpiMarkers.pdf"),
   plot = last_plot(),
   width = 12.3,
   height = 5)
@@ -151,7 +174,7 @@ heatmap <- DoHeatmap(
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-  filename = paste0(dir_out, "Tan_epithelial_WangEpiMarkers.pdf"),
+  filename = paste0(dir_out, "SFig3g_Tan_epithelial_WangEpiMarkers.pdf"),
   plot = last_plot(),
   width = 15,
   height = 15)
@@ -161,11 +184,8 @@ ggsave(
 
 
 ## ---------------------------------- ##
-##  Supplementary figure 3.h
+##  Supplementary Data Figure 3.h
 ## ---------------------------------- ##
-
-#Supplementary Data Figure 3 h
-#CODE OK
 
 ####### Download data from Tan et al. 2022 (DOI: 10.1038/s41556-022-00961-5) through the command line
 #cd endometriosis_endometrium_scRNA_atlas/_Data
@@ -200,7 +220,7 @@ heatmap <- DoHeatmap(
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-  filename = paste0(dir_out, "Tan_stromal_Fig2EpiMarkers.pdf"),
+  filename = paste0(dir_out, "SFig3h_Tan_stromal_Fig2EpiMarkers.pdf"),
   plot = last_plot(),
   width = 12.3,
   height = 5)
@@ -219,7 +239,7 @@ heatmap <- DoHeatmap(
   scale_fill_gradientn(limits = c(-2, 2), colors = c("#FF00FF", "#000000", "#FFFF00"))
 heatmap
 ggsave(
-  filename = paste0(dir_out, "Tan_stromal_WangEpiMarkers.pdf"),
+  filename = paste0(dir_out, "SFig3h_Tan_stromal_WangEpiMarkers.pdf"),
   plot = last_plot(),
   width = 15,
   height = 15)

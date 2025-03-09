@@ -29,8 +29,10 @@ dir_out <- "../_Data/Figures/"
 ## Figure 1.c
 ## ---------------------------------- ##
 
+#Load data
 EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 
+#Plot and save
 order <- EndoAtlas@meta.data %>%
   select(AnnotationMain, AnnotationRefined) %>%
   filter(!is.na(AnnotationMain)) %>%
@@ -48,6 +50,10 @@ ggsave(filename = paste0(dir_out, 'Fig1c.pdf'),
 ## Figure 1.d
 ## ---------------------------------- ##
 
+#Load data
+EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
+
+#Plot and save
 Fig1d_1 <- EndoAtlas@meta.data %>%
   group_by(AnnotationMain) %>%
   summarise(row_count = n()) %>% 
@@ -58,6 +64,7 @@ ggsave(paste0(dir_out, "Fig1d_1.pdf"),
        plot = last_plot(),
        width = 15, height = 6)
 
+#Plot and save
 Fig1d_2 <- EndoAtlas@meta.data %>%
   group_by(sample, AnnotationMain) %>%
   summarise(row_count = n()) %>%
@@ -70,7 +77,7 @@ ggsave(paste0(dir_out, "Fig1d_2.pdf"),
        plot = last_plot(),
        width = 15, height = 6)
 
-
+#Plot and save
 Fig1d_3 <- EndoAtlas@meta.data %>%
   filter(!is.na(AnnotationMain)) %>%
   group_by(AnnotationMain, EndometriosisGrade) %>%
@@ -87,8 +94,10 @@ ggsave(paste0(dir_out, "Fig1d_3.pdf"),
 ## Figure 1.e
 ## ---------------------------------- ##
 
-
+#Load data
 p <- readRDS("../_Data/03_PCA_analysis/p_EndoAtlas.rds")
+
+#Plot and save
 pdf(paste0(dir_out,"eigencorplot_final_BH.pdf"), width = 10, height = 5)
 eigencorplot(p,
              metavars = c("sample","EndometriosisStatus","EndometriosisGrade","CycleDay","ProgesteroneSerum","MenstrualCyclePhase","MenstrualCyclePhase_main","sequencing.batch", "X10x.capturing.batch"),
