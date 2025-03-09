@@ -35,6 +35,7 @@ To install Project Title, follow these steps:
     ```{bash}
     cd endometriosis_endometrium_scRNA_atlas/_Data
     ln -s /path/to/EndoAtlas.rds EndoAtlas.rds
+	ln -s /path/to/epithelial_cells_monocle3.rds epithelial_cells_monocle3.rds
     ln -s /path/to/64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz 64_1r_L1_R1_001_GiiMsim2jmMj.fastq.gz
     ...
     ```
