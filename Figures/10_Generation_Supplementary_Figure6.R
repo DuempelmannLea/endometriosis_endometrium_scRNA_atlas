@@ -16,6 +16,7 @@ library(tinter)
 library(UpSetR)
 library(forcats)
 library(reshape2)
+library(ComplexHeatmap)
 
 # input path 
 input_path <- '../Tables/' 
@@ -31,18 +32,18 @@ source('./common_functions.R')
 ## ---------------------------------- ##
 
 #Load data
-ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
+ScaiVision_meta <- read.csv(file.path(input_path,'ScaiVision_metadata_prolif_folds.csv')) 
 
 # reshape df
-melted_meta <- melt(ScaiNET_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+melted_meta <- melt(ScaiVision_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
 
 # barplot and save
 SFig6a <- ggplot(melted_meta, aes(x = variable, fill = endo_grade)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
-  labs(title = "Bar Plot of Samples by Endo EndometriosisGrade",
+  labs(title = "Bar Plot of Samples by Endometriosis Grade",
        x = "Fold",
-       y = "Number of Samples") +
+       y = "Number of Samples",fill="endometriosis status") +
   scale_fill_manual(values = c("severe" = "red", "mild" = "orange", "CTL" = "blue")) +
   theme_minimal() +
   coord_flip()
@@ -54,18 +55,19 @@ ggsave(filename = paste0(dir_out, 'SFig6a.pdf'),
 ##  Supplementary Data Figure 6.b
 ## ---------------------------------- ##
 #Load data
-ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
+ScaiVision_meta <- read.csv(file.path(input_path,'ScaiVision_metadata_prolif_folds.csv')) 
 
 # reshape df
-melted_meta <- melt(ScaiNET_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
+melted_meta <- melt(ScaiVision_meta, id.vars = c("lane", "endo_grade"), measure.vars = c("fold1", "fold2", "fold3", "fold4", "fold5"))
 
 # barplot and save
 SFig6b <- ggplot(melted_meta, aes(x = variable, fill = lane)) +
   geom_bar(position = "stack", width = 0.7) +
   facet_wrap(~ fct_rev(value), ncol = 2) +
-  labs(title = "Bar Plot of Samples by lane",
+  labs(title = "Bar Plot of Samples by sequencing batch",
        x = "Fold",
-       y = "Number of Samples") +
+       y = "Number of Samples",fill= "Sequencing") +
+  scale_fill_manual(labels=c('1st batch','2nd batch'),values=c('darkorange','darkblue')) +
   theme_minimal() +
   coord_flip()
 ggsave(filename = paste0(dir_out, 'SFig6b.pdf'),
@@ -77,18 +79,26 @@ ggsave(filename = paste0(dir_out, 'SFig6b.pdf'),
 ## ---------------------------------- ##
 
 #Load data
-ScaiNET_meta <- read.csv(file.path(input_path,'ScaiNET_metadata_prolif_folds.csv.csv')) 
+ScaiVision_meta <- read.csv(file.path(input_path,'ScaiVision_metadata_prolif_folds.csv')) 
 
 # Remove 'names' column as it will be used as row labels
-rownames(ScaiNET_meta) <- ScaiNET_meta$names
+rownames(ScaiVision_meta) <- ScaiVision_meta$names
 
 # Convert non-numeric columns to factors
-ScaiNET_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(ScaiNET_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
+ScaiVision_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")] <- lapply(ScaiVision_meta[, c("treatment", "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")], as.factor)
 
+# Prepare metdata for plotting 
+ScaiVision_meta_plot <- ScaiVision_meta %>%
+  dplyr::select(c( "lane",  "endo_grade",  "fold1", "fold2", "fold3", "fold4", "fold5")) %>%
+  dplyr::rename(endometriosis_status ='endo_grade',
+               sequencing_batch = 'lane'
+                 )
+  
 
-# Create heatmap using ComplexHeatmap
-pdf(paste0(dir_out, "SFig6c_ScaiNET_meta.pdf"), width = 7, height = 9)
-Heatmap(ScaiNET_meta,
+# Create heatmap using ComplexHeatmap 
+# Colors were modified using Illustrator
+pdf(paste0(dir_out, "SFig6c_ScaiVision_meta.pdf"), width = 7, height = 9)
+Heatmap(ScaiVision_meta_plot,
         name = "Metadata",
         row_names_side = "left",
         row_names_gp = gpar(fontsize = 8),
@@ -96,8 +106,8 @@ Heatmap(ScaiNET_meta,
         cluster_columns = FALSE,
         show_column_names = TRUE,
         show_row_names = TRUE,
-        column_title = "Columns",
-        row_title = "Row Names",
+        column_title = "",
+        row_title = "",
         heatmap_legend_param = list(title = "Legend")
 )
 dev.off()

@@ -31,7 +31,7 @@ EndoAtlas <- readRDS("../_Data/EndoAtlas.rds")
 #Highlight cycling fibroblasts
 Idents(EndoAtlas) <- EndoAtlas$cycling.fibroblast
 cyclingfibs <- WhichCells(EndoAtlas, idents = "TRUE")
-SFig7a <- DimPlot(data_ds, reduction = "umap", cells.highlight = cyclingfibs, cols.highlight = c("darkred"), cols= "grey", raster = FALSE)
+SFig7a <- DimPlot(EndoAtlas, reduction = "umap", cells.highlight = cyclingfibs, cols.highlight = c("darkred"), cols= "grey", raster = FALSE)
 ggsave(filename = paste0(dir_out, '../_Data/Figures/SFig7a.pdf'),
        plot = SFig7a,
        width =20, height=9)
