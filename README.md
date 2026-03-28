@@ -8,7 +8,7 @@ It contains custom code for atlas integration, Sample-wise Principal Component A
 ## **Associated Publication**
 ### **Publication Title**
 
-Tracing Endometriosis: Coupling deeply phenotyped, single-cell based Endometrial Differences and AI for disease pathology and prediction
+Endometriosis-Related Alterations in the Endometrium revealed by Integrated Single-Cell and AI-Powered Approaches
 
 ### **Publication Abstract**
 
